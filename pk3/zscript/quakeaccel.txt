@@ -481,12 +481,9 @@ class QuakeAccelPlayer: PlayerPawn
             return ret;
         }
         
-        double oldFriction = self.Friction;
         double normFriction, normSpeed;
 
-        Friction = 1;
         [normFriction, normSpeed] = GetFriction();
-        Friction = oldFriction;
         
         double frictionMult = (1 - normFriction) / (1 - DEFAULT_FRICTION);
         double speedMult    = normSpeed          / DEFAULT_MOVEMULT;
