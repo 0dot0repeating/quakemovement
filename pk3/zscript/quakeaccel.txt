@@ -1,0 +1,804 @@
+class QuakeAccelPlayer: PlayerPawn
+{
+    const MAXMOVE                = 0x3200;        // purely for scaling the movement commands
+    const DEFAULT_FRICTION       = 0.90625;       // default friction, used for scaling our friction
+    const DEFAULT_MOVEMULT       = 0.03125;       // default movement speed mult, also used for friction scaling
+    const MORE_FRICTION_VELOCITY = 15000.0/65536; // to unfuck the movement scaling on high friction floors
+    const MAXSLOPEPITCH          = 45;            // Slopes at or above this pitch won't get jumped up
+    // interal vars
+
+    protected bool    Q_Enabled;             // if off, use regular movement
+    protected bool    Q_BlockJump;           // set when you jump, cleared when you let go of jump
+    protected bool    Q_BlockSlide;          // set when you jump, cleared when you let go of crouch
+    protected uint    Q_CrouchSlideHeldTime; // how many tics you've held crouch
+    protected int     Q_GroundTime;          // positive = tics spent on ground, negative = tics spent off ground
+    protected int     Q_FallTime;            // time spent off ground with negative Z velocity
+    protected vector3 Q_LastVel;
+
+    // Q_BlockJump is only set if Q_Autohop is off
+    // Q_BlockSlide is only set if Q_EasyCrouchSlide is off
+    // Q_CrouchSlideHeldTime won't count down in midair if Q_AutoSlide is on
+    // Q_FallTime resets when you next leave the ground
+
+    // exposed vars
+
+    bool   Q_UseQuakeAccel;    // self explanatory
+
+    double Q_GroundSpeed;      // how much speed (u/s**2) you gain in
+    double Q_AirSpeed;         // a second when moving 100% in one direction,
+    double Q_FlySpeed;         // ignoring friction and speed caps
+    double Q_WaterSpeed;
+    double Q_CSlideSpeed;
+
+    double Q_MaxGroundSpeed;   // acceleration "speed cap" (u/s) - it
+    double Q_MaxAirSpeed;      // only checks your velocity in the direction
+    double Q_MaxFlySpeed;      // you're accelerating, hence strafejumping
+    double Q_MaxWaterSpeed;    //
+    double Q_MaxCSlideSpeed;   // max speed values below 0 mean "no speed cap"
+
+    double Q_GroundFriction;   // how many seconds it takes for your velocity to
+    double Q_AirFriction;      // be reduced to half its current value - engine
+    double Q_FlyFriction;      // friction is zeroed out to allow for ours
+    double Q_WaterFriction;    //
+    double Q_CSlideFriction;   // friction value below 0 means "no friction"
+
+    double Q_StopGroundSpeed;  // if your speed (u/s) is below this value, the
+    double Q_StopAirSpeed;     // friction formula acts like your speed is this
+    double Q_StopFlySpeed;     // when determining how much to lower your velocity
+    double Q_StopWaterSpeed;
+    double Q_StopCSlideSpeed;
+
+    double Q_Gravity;               // gravity value when using quake accel
+    double Q_JumpHeight;            // jump height to use when using quake accel
+    double Q_MidairStepHeight;      // your MaxStepHeight when in midair
+    double Q_DoubleJumpFactor;      // add portion of jump height to Z velocity on jump, rather than just set
+    double Q_RampJumpFactor;        // Controls how much a ramp's slope can affect your jump height
+    double Q_CrouchSpeedMult;       // for speed and max speed values
+    uint   Q_CrouchSlideTime;       // minimum amount of tics you can slide for after hitting the ground
+    double Q_CrouchSlideTimeScale;  // your fall time is multiplied by this and added to Q_CrouchSlideTime
+    uint   Q_CrouchSlideTimeMax;    // does exactly what it says it does (it's in tics)
+
+    bool   Q_EasyCrouchSlide;  // slide time doesn't tick down if you hold crouch in midair
+    bool   Q_Autohop;          // you don't need to let go of jump to repeatedly jump
+    bool   Q_AutoSlide;        // you don't need to let go of crouch to repeatedly slide
+    bool   Q_FlawedAirMove;    // replicate quake 3 behavior where holding jump midair slows horizontal movement
+    bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
+
+    property UseQuakeAccel:   Q_UseQuakeAccel;
+
+    property GroundSpeed:     Q_GroundSpeed;
+    property AirSpeed:        Q_AirSpeed;
+    property FlySpeed:        Q_FlySpeed;
+    property WaterSpeed:      Q_WaterSpeed;
+    property CSlideSpeed:     Q_CSlideSpeed;
+
+    property MaxGroundSpeed:  Q_MaxGroundSpeed;
+    property MaxAirSpeed:     Q_MaxAirSpeed;
+    property MaxFlySpeed:     Q_MaxFlySpeed;
+    property MaxWaterSpeed:   Q_MaxWaterSpeed;
+    property MaxCSlideSpeed:  Q_MaxCSlideSpeed;
+
+    property GroundFriction:  Q_GroundFriction;
+    property AirFriction:     Q_AirFriction;
+    property FlyFriction:     Q_FlyFriction;
+    property WaterFriction:   Q_WaterFriction;
+    property CSlideFriction:  Q_CSlideFriction;
+
+    property StopGroundSpeed: Q_StopGroundSpeed;
+    property StopAirSpeed:    Q_StopAirSpeed;
+    property StopFlySpeed:    Q_StopFlySpeed;
+    property StopWaterSpeed:  Q_StopWaterSpeed;
+    property StopCSlideSpeed: Q_StopCSlideSpeed;
+
+    property QGravity:              Q_Gravity;
+    property QJumpHeight:           Q_JumpHeight;
+    property MidairStepHeight:      Q_MidairStepHeight;
+    property DoubleJumpFactor:      Q_DoubleJumpFactor;
+    property RampJumpFactor:        Q_RampJumpFactor;
+    property CrouchSpeedMult:       Q_CrouchSpeedMult;
+    property CrouchSlideTime:       Q_CrouchSlideTime;
+    property CrouchSlideTimeScale:  Q_CrouchSlideTimeScale;
+    property CrouchSlideTimeMax:    Q_CrouchSlideTimeMax;
+
+    property Autohop:          Q_Autohop;
+    property AutoSlide:        Q_AutoSlide;
+    property VQ1Bunnyhop:      Q_VQ1Bunnyhop;
+    property EasyCrouchSlide:  Q_EasyCrouchSlide;
+    property FlawedAirMove:    Q_FlawedAirMove;
+
+    Default
+    {
+        QuakeAccelPlayer.UseQuakeAccel   true;
+
+        // the crouchslide values are based off of quake 4 @ 60 fps
+        // if you want slash sliding as of october, double the speed values
+        //  (quake 4 is largely locked at 60fps, tho q4max duels run at 90fps)
+        //
+        // the rest of them are based off of quake 1 @ 77 fps
+        //  (quakeworld servers typically run at 77fps)
+        //
+        // if you're porting values from other games with quake movement, here's a
+        //  python function to help you port the friction values
+        //
+        // halftime = lambda friction, ticrate: math.log(0.5, 1-(friction/ticrate))/ticrate
+        //
+        // some quake -> halftime friction values:
+        //
+        //      60 FPS    72 FPS    77 FPS    85 FPS    125 FPS
+        //  1: 0.687355  0.688322  0.688636  0.689062  0.690371
+        //  2: 0.340765  0.341737  0.342053  0.342480  0.343794
+        //  3: 0.225223  0.226201  0.226518  0.226947  0.228265
+        //  4: 0.167444  0.168427  0.168746  0.169177  0.170499
+        //  5: 0.132769  0.133758  0.134078  0.134511  0.135838
+        //  6: 0.109647  0.110641  0.110963  0.111397  0.112729
+
+        QuakeAccelPlayer.GroundSpeed     4400;
+        QuakeAccelPlayer.AirSpeed        4400;
+        QuakeAccelPlayer.FlySpeed        4400;
+        QuakeAccelPlayer.WaterSpeed      3850;
+        QuakeAccelPlayer.CSlideSpeed     2200;
+
+        QuakeAccelPlayer.MaxGroundSpeed  440;
+        QuakeAccelPlayer.MaxAirSpeed     41.25;
+        QuakeAccelPlayer.MaxFlySpeed     440;
+        QuakeAccelPlayer.MaxWaterSpeed   220; // not authentic, but closer to doom
+        QuakeAccelPlayer.MaxCSlideSpeed  220;
+
+        QuakeAccelPlayer.GroundFriction  0.168746;
+        QuakeAccelPlayer.AirFriction     -1;
+        QuakeAccelPlayer.FlyFriction     0.168746;
+        QuakeAccelPlayer.WaterFriction   0.168746;
+        QuakeAccelPlayer.CSlideFriction  0.687355;
+
+        QuakeAccelPlayer.StopGroundSpeed 137.5;
+        QuakeAccelPlayer.StopAirSpeed    0;
+        QuakeAccelPlayer.StopFlySpeed    137.5;
+        QuakeAccelPlayer.StopWaterSpeed  137.5;
+        QuakeAccelPlayer.StopCSlideSpeed 137.5;
+
+        QuakeAccelPlayer.QGravity               0.65;
+        QuakeAccelPlayer.QJumpHeight            40;
+        QuakeAccelPlayer.MidairStepHeight       0;
+        QuakeAccelPlayer.DoubleJumpFactor       1;
+        QuakeAccelPlayer.RampJumpFactor         0.707;
+        QuakeAccelPlayer.CrouchSpeedMult        0.5;
+        QuakeAccelPlayer.CrouchSlideTime        0;
+        QuakeAccelPlayer.CrouchSlideTimeScale   0;
+        QuakeAccelPlayer.CrouchSlideTimeMax     0;
+
+        QuakeAccelPlayer.Autohop           false;
+        QuakeAccelPlayer.AutoSlide         false;
+        QuakeAccelPlayer.VQ1Bunnyhop       false;
+        QuakeAccelPlayer.EasyCrouchSlide   false;
+        QuakeAccelPlayer.FlawedAirMove     false;
+    }
+
+
+    static double QA_Turbo()
+    {
+        return CVar.FindCVar("turbo").GetFloat() / 100;
+    }
+
+
+    static vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
+    {
+        // x' =  cos(angle) cos(pitch)x + -sin(angle)y + cos(angle) sin(pitch)z
+        // y' =  sin(angle) cos(pitch)x +  cos(angle)y + sin(angle) sin(pitch)z
+        // z' =            -sin(pitch)x                +            cos(pitch)z
+
+        vector3 ret;
+
+        ret.x = (vec.x * cos(yaw) * cos(pitch))
+              - (vec.y * sin(yaw))
+              + (vec.z * cos(yaw) * sin(pitch));
+
+        ret.y = (vec.x * sin(yaw) * cos(pitch))
+              + (vec.y * cos(yaw))
+              + (vec.z * sin(yaw) * sin(pitch));
+
+        ret.z = -(vec.x * sin(pitch))
+              +  (vec.z * cos(pitch));
+
+        return ret;
+    }
+
+
+    static void QA_NormalizeMoveCmd(UserCmd cmd)
+    {
+        // Make walk speed 50% of run speed even when strafing (or try to, anyway -
+        //  there's no way of telling whether an analog stick is walking at <= 100%
+        //  or running at <= 60%)
+
+        // Movement commands are left shifted 8 bits before being sent to ZScript
+        if (abs(cmd.sidemove) < (uint(0x28 * QA_Turbo()) << 8))
+        {
+            cmd.sidemove = (cmd.sidemove * 25) / 24;
+        }
+        else
+        {
+            cmd.sidemove = (cmd.sidemove * 5) / 4;
+        }
+
+        // throw jump and crouch into here, and loosely guess at whether the player
+        //  is walking or running
+        int maxXYmove = max(abs(cmd.forwardmove), abs(cmd.sidemove));
+
+        cmd.upmove = (cmd.upmove * MAXMOVE) / 0x300;
+
+        if (cmd.buttons & BT_JUMP)   { cmd.upmove += max(MAXMOVE / 2, maxXYmove); }
+        if (cmd.buttons & BT_CROUCH) { cmd.upmove -= max(MAXMOVE / 2, maxXYmove); }
+
+        cmd.upmove = clamp(cmd.upmove, -MAXMOVE, MAXMOVE);
+    }
+
+
+    static vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, bool flying = false, bool flawedXY = false)
+    {
+        vector3 movedir;
+
+        if (flying)
+        {
+            movedir = QA_Rotate3D((cmd.forwardmove, -cmd.sidemove, 0), angle, pitch);
+            if (abs(cmd.upmove) >= (MAXMOVE / 4)) { movedir.z = cmd.upmove; }
+        }
+        else
+        {
+            vector2 movedir_xy = RotateVector((cmd.forwardmove, -cmd.sidemove), angle);
+            movedir = (movedir_xy.x, movedir_xy.y, flawedXY ? cmd.upmove : 0);
+        }
+
+        movedir /= (MAXMOVE * QA_Turbo());
+
+        double movelength = movedir.length();
+        if (movelength == 0) { return (0, 0, 0), 0; }
+
+        double movescalar = 1;
+
+        if (flawedXY)
+        {
+            movedir.z  = 0;
+            movescalar = movedir.length() / movelength;
+            movelength = movedir.length();
+
+            if (movelength == 0) { return (0, 0, 0), 0; }
+        }
+
+        movelength = min(movelength, 1) * movescalar;
+        return movedir.unit(), movelength;
+    }
+
+
+    void QA_SetEnabled(bool on)
+    {
+        // voodoo doll check
+        if (!self.player || self.player.mo != self) { return; }
+
+        Q_Enabled         = on;
+        Gravity           = on ? Q_Gravity : Default.Gravity;
+        JumpZ             = on ? sqrt(2 * Q_JumpHeight * Q_Gravity) : Default.JumpZ;
+        bNoFriction       = on ? true : Default.bNoFriction;
+        bNoFrictionBounce = on ? true : Default.bNoFrictionBounce;
+
+        // to avoid any issues with turning quake accel off in midair
+        if (!on) { MaxStepHeight = Default.MaxStepHeight; }
+    }
+
+
+    override void Tick()
+    {
+        if (Q_Enabled != Q_UseQuakeAccel) { QA_SetEnabled(Q_UseQuakeAccel); }
+        //Friction = Q_Enabled ? 50000 : Default.Friction;
+        Super.Tick();
+    }
+
+
+    void Bob(vector3 addVel)
+    {
+        player.Vel += (addVel.x, addVel.y);
+    }
+
+    void ReduceBob(double bobFactor)
+    {
+        player.Vel *= bobFactor;
+    }
+
+    // Override to make (un)crouching faster
+    override void CheckCrouch(bool totallyfrozen)
+    {
+        if (!Q_Enabled) { Super.CheckCrouch(totallyfrozen); return; }
+
+        let player = self.player;
+        UserCmd cmd = player.cmd;
+
+        if (CanCrouch() && player.health > 0 && level.IsCrouchingAllowed())
+        {
+            if (!totallyfrozen)
+            {
+                int crouchdir = player.crouching;
+
+                if (crouchdir == 0)
+                {
+                    crouchdir = (cmd.buttons & BT_CROUCH) ? -1 : 1;
+                }
+                else if (cmd.buttons & BT_CROUCH)
+                {
+                    player.crouching = 0;
+                }
+                if (crouchdir == 1 && player.crouchfactor < 1 && pos.Z + height < ceilingz)
+                {
+                    CrouchMove(4);
+                }
+                else if (crouchdir == -1 && player.crouchfactor > 0.5)
+                {
+                    CrouchMove(-4);
+                }
+            }
+        }
+        else
+        {
+            player.Uncrouch();
+        }
+
+        player.crouchoffset = -(ViewHeight) * (1 - player.crouchfactor);
+    }
+
+
+    override void HandleMovement()
+    {
+        if (!Q_Enabled) { Super.HandleMovement(); return; }
+
+        let player  = self.player;
+        UserCmd cmd = player.cmd;
+
+        // [RH] Check for fast turn around
+        if (cmd.buttons & BT_TURN180 && !(player.oldbuttons & BT_TURN180))
+        {
+            player.turnticks = TURN180_TICKS;
+        }
+
+        bool wasOnGround = player.onground;
+        player.onground = (pos.z <= floorz) || bOnMobj || bMBFBouncer || (player.cheats & CF_NOCLIP2);
+        MaxStepHeight = (player.onground || waterlevel > 0) ? Default.MaxStepHeight : Q_MidairStepHeight;
+        Q_GroundTime  = player.onground ? max(0, Q_GroundTime) + 1 : min(0, Q_GroundTime) - 1;
+
+        if (Q_GroundTime < 0)
+        {
+            if (Q_GroundTime == -1) { Q_FallTime = 0; }
+            Q_FallTime = vel.z > 0 ? 0 : Q_FallTime + 1;
+        }
+
+        QA_NormalizeMoveCmd(cmd);
+        if (!(cmd.buttons & BT_JUMP))   { Q_BlockJump  = false; }
+        if (!(cmd.buttons & BT_CROUCH)) { Q_BlockSlide = false; }
+
+        QA_TurnPlayer();
+
+        if (QA_CanFlyMove())
+        {
+            QA_FlyMove();
+        }
+        else
+        {
+            QA_GravityMove();
+        }
+
+        QA_SetRoll(cmd);
+
+        if (reactiontime > 0) { reactiontime--; }
+        Q_LastVel = vel;
+    }
+
+
+    override void DeathThink()
+    {
+        Super.DeathThink();
+
+        if (Q_Enabled)
+        {
+            if (QA_CanFlyMove())
+            {
+                QA_Friction(Q_FlyFriction, Q_StopFlySpeed);
+            }
+            else if (player.onground)
+            {
+                QA_Friction(Q_GroundFriction, Q_StopGroundSpeed);
+            }
+            else
+            {
+                QA_Friction(Q_AirFriction, Q_StopAirSpeed);
+            }
+        }
+    }
+
+
+    bool QA_CanFlyMove()
+    {
+        return waterlevel || bNoGravity;
+    }
+
+
+    bool QA_IsCrouching(UserCmd cmd)
+    {
+        if (player.IsTotallyFrozen() || player.crouchfactor == -1) { return false; }
+        int crouchdir = (cmd.buttons & BT_CROUCH) ? -1 : 1;
+
+        // wants to crouch
+        if (crouchdir == -1) { return player.crouchfactor <= 1; }
+
+        // wants to uncrouch
+        return player.crouchfactor <= 0.5;
+    }
+
+
+    double QA_GetSpeedBoosts()
+    {
+        double factor = Speed * QA_Turbo();
+
+        if (!player.morphTics)
+        {
+            for(let it = Inv; it != null; it = it.Inv)
+            {
+                factor *= it.GetSpeedFactor ();
+            }
+        }
+
+        return factor;
+    }
+
+
+    void QA_TurnPlayer()
+    {
+        let player = self.player;
+        UserCmd cmd = player.cmd;
+
+        // [RH] 180-degree turn overrides all other yaws
+        if (player.turnticks > 0)
+        {
+            player.turnticks--;
+            Angle += (180. / TURN180_TICKS);
+        }
+        else
+        {
+            Angle += cmd.yaw * (360./65536.);
+        }
+    }
+
+
+    // Returns movement speed multiplier
+    double QA_Friction(double halftime, double stopspeed, bool usez = false)
+    {
+        if (!usez)
+        {
+            double vz = vel.z;
+            vel.z = 0;
+            double ret = QA_Friction(halftime, stopspeed, true);
+            vel.z = vz;
+            return ret;
+        }
+        
+        double oldFriction = self.Friction;
+        double normFriction, normSpeed;
+
+        Friction = 1;
+        [normFriction, normSpeed] = GetFriction();
+        Friction = oldFriction;
+        
+        double frictionMult = (1 - normFriction) / (1 - DEFAULT_FRICTION);
+        double speedMult    = normSpeed          / DEFAULT_MOVEMULT;
+        double speed        = vel.length();
+
+        if (frictionMult > 1)
+        {
+            // unfuck the speed multiplier
+            if      (speed <= MORE_FRICTION_VELOCITY)     { speedMult *= 8; }
+            else if (speed <= MORE_FRICTION_VELOCITY * 2) { speedMult *= 4; }
+            else if (speed <= MORE_FRICTION_VELOCITY * 4) { speedMult *= 2; }
+        }
+        
+        // unfuck water level speed mult bullshit
+        if (waterlevel > 0 && !player.onground) { speedMult *= 2; }
+
+        if (halftime == 0) { vel = (0,0,0); }
+        
+        if (vel.length() == 0)
+        {
+            ReduceBob(0);
+            PlayIdle();
+            return speedMult;
+        }
+
+        if (halftime < 0)
+        {
+            return speedMult;
+        }
+
+        // base equation: (1 - friction) ** (halftime * TICRATE) = 0.5
+        double friction = -(0.5 ** (1/(halftime * TICRATE))) + 1;
+
+        double baseSpeed  = vel.length() * TICRATE;
+        double startSpeed = baseSpeed > stopspeed ? baseSpeed : stopspeed;
+        double dropSpeed  = startSpeed * (1 - (friction * frictionMult));
+
+        double diffSpeed  = startSpeed - dropSpeed;
+        double endSpeed   = max(0, vel.length() - (diffSpeed / TICRATE));
+
+        if (endSpeed == 0)
+        {
+            PlayIdle();
+            ReduceBob(0);
+            vel = (0, 0, 0);
+        }
+        else
+        {
+            vector3 newvel = vel.unit() * endSpeed;
+            ReduceBob(speed > 0 ? endSpeed / speed : 0);
+            vel = newvel;
+        }
+
+        return speedMult;
+    }
+
+
+    vector3 QA_Accelerate(vector3 wishdir, double wishspeed, double maxspeed)
+    {
+        vector3 addVel;
+        
+        if (maxspeed < 0)
+        {
+            addVel = wishdir * (wishspeed / (TICRATE * TICRATE));
+        }
+        else
+        {
+            double projSpeed  = vel dot wishdir;
+            double deltaSpeed = (maxspeed / TICRATE) - projSpeed;
+            if (deltaSpeed <= 0) { return (0, 0, 0); }
+
+            addVel = wishdir * min(wishspeed / (TICRATE * TICRATE), deltaSpeed);
+        }
+
+        vel += addVel;
+        return addVel;
+    }
+
+
+    // Returns the normal of the floor you're standing on, or (0, 0, 1) in midair
+    //  Also returns whether it's ok to jump or not
+
+    vector3, bool QA_CheckIfJumpable(double maxPitch = double.max)
+    {
+        if (floorsector)
+        {
+            double fas_floorz;
+            Sector fas_sector;
+
+            [fas_floorz, fas_sector] = floorsector.NextLowestFloorAt(pos.x, pos.y, pos.z, FFCF_3DRESTRICT, MaxStepHeight);
+
+            vector3 normal = fas_sector.floorplane.Normal;
+            double floorPitch = 90 - atan2(normal.z, (normal.x, normal.y).length());
+
+            if (pos.z <= fas_floorz)
+            {
+                return normal, floorPitch < maxPitch;
+            }
+        }
+
+        return (0, 0, 1), false;
+    }
+
+
+    bool QA_CheckJump()
+    {
+        UserCmd cmd = player.cmd;
+
+        if (player.onGround && (cmd.buttons & BT_JUMP) && level.IsJumpingAllowed() && !Q_BlockJump)
+        {
+            vector3 floornormal;
+            bool canjump;
+
+            [floornormal, canjump] = QA_CheckIfJumpable(MAXSLOPEPITCH);
+            if (!canjump) { return false; }
+
+
+            double jumpvelz = (JumpZ * 35) / TICRATE;
+            double jumpfac  = 0;
+
+            // [BC] If the player has the high jump power, double his jump velocity.
+            // (actually, pick the best factors from all active items.)
+            //
+            // I would modify this to add the effective jump bonuses together,
+            //  but that'd lead to serious jump height sequence breaks
+            for (let p = Inv; p != null; p = p.Inv)
+            {
+                let pp = PowerHighJump(p);
+
+                if (pp)
+                {
+                    double f = pp.Strength;
+                    jumpfac = max(jumpfac, f);
+                }
+            }
+
+            if (jumpfac > 0) { jumpvelz *= jumpfac; }
+
+            vector3 startVel = vel;
+            vector3 rampVel  = startvel;
+
+            // Disgusting hack to get what our Z velocity should be
+            // Breaks with teleporters, although I guess you could say it's
+            //  kinda like portal jumping
+            if (Q_GroundTime <= 1)
+            {
+                startVel.z = rampVel.z = Q_LastVel.z - GetGravity();
+            }
+
+            double speedFromFloor = startVel dot floornormal;
+            vector3 fromFloorVel  = floornormal * speedFromFloor;
+            vector3 alignedvel    = startVel - fromFloorVel;
+
+            vector3 jumpvector = (0, 0, jumpvelz);
+
+            // Going into floor and bunnyhopping, align jump to floor
+            if (Q_GroundTime <= 1 && speedFromFloor < 0)
+            {
+                jumpvector = floornormal * jumpvelz;
+            }
+
+            if (speedFromFloor > 0) { rampVel = alignedvel + (fromFloorVel * Q_DoubleJumpFactor); }
+            else                    { rampVel = alignedvel; }
+            
+            rampVel += jumpvector;
+
+            // XY changes always apply to ramp jumps, but Z changes can be disabled
+            vector3 noRampVel  = (vel.x, vel.y, jumpvelz + max(0, startvel.z * Q_DoubleJumpFactor));
+            vector3 noRampDiff = rampVel - noRampVel;
+            
+            vel = noRampVel + (noRampDiff * Q_RampJumpFactor);
+
+            if (!Q_Autohop) { Q_BlockJump  = true; }
+            if (!(player.cheats & CF_PREDICTING)) { A_PlaySound("*jump", CHAN_BODY); }
+
+            return true;
+        }
+
+        return false;
+    }
+
+
+    void QA_FlyMove()
+    {
+        UserCmd cmd = player.cmd;
+        vector3 movedir;
+        double  movelength;
+        
+        bool surfacing = waterlevel <= 1 && !bNoGravity;
+        
+        if (surfacing)
+        {
+            QA_GravityMove();
+            vel.z -= GetGravity();
+            return;
+        }
+        
+        if (reactiontime <= 0)
+        {
+            [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, true);
+        }
+
+        double speedmult, wishspeed, maxspeed, friction;
+
+        if (waterlevel)
+        {
+            friction  = QA_Friction(Q_WaterFriction, Q_StopWaterSpeed, true);
+            wishspeed = Q_WaterSpeed;
+            maxspeed  = Q_MaxWaterSpeed;
+        }
+        else
+        {
+            friction  = QA_Friction(Q_FlyFriction, Q_StopFlySpeed, true);
+            wishspeed = Q_FlySpeed;
+            maxspeed  = Q_MaxFlySpeed;
+        }
+
+        speedmult = QA_GetSpeedBoosts() * friction * movelength;
+        if (QA_IsCrouching(cmd)) { speedmult *= Q_CrouchSpeedMult; }
+
+        vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
+        Bob(accel);
+
+        if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
+    }
+
+
+    void QA_GravityMove()
+    {
+        UserCmd cmd = player.cmd;
+        vector3 movedir;
+        double  movelength;
+
+        double friction, wishspeed, maxspeed;
+        bool jumping = false;
+        bool sliding = false;
+
+        jumping = QA_CheckJump();
+
+        if (QA_IsCrouching(cmd) && (player.onGround || !Q_EasyCrouchSlide))
+        {
+            Q_CrouchSlideHeldTime++;
+        }
+        else if (player.onGround)
+        {
+            Q_CrouchSlideHeldTime = Q_CrouchSlideTime;
+        }
+        else
+        {
+            Q_CrouchSlideHeldTime = 0;
+        }
+
+        if (player.onground && (!jumping || Q_VQ1Bunnyhop))
+        {
+            if (reactiontime <= 0)
+            {
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, false, false);
+            }
+            
+            int slideTimeLimit = Q_CrouchSlideTime + int(Q_FallTime * Q_CrouchSlideTimeScale);
+            if (Q_CrouchSlideTimeMax > 0) { slideTimeLimit = min(slideTimeLimit, Q_CrouchSlideTimeMax); }
+
+            if (QA_IsCrouching(cmd) && !Q_BlockSlide && Q_CrouchSlideHeldTime <= slideTimeLimit)
+            {
+                friction  = QA_Friction(Q_CSlideFriction, Q_StopCSlideSpeed);
+                wishspeed = Q_CSlideSpeed;
+                maxspeed  = Q_MaxCSlideSpeed;
+                sliding   = true;
+            }
+            else
+            {
+                friction  = QA_Friction(Q_GroundFriction, Q_StopGroundSpeed);
+                wishspeed = Q_GroundSpeed;
+                maxspeed  = Q_MaxGroundSpeed;
+            }
+        }
+        else
+        {
+            if (reactiontime <= 0)
+            {
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, false, Q_FlawedAirMove);
+            }
+
+            friction  = QA_Friction(Q_AirFriction, Q_StopAirSpeed);
+            wishspeed = Q_AirSpeed;
+            maxspeed  = Q_MaxAirSpeed;
+        }
+        
+        double speedmult = QA_GetSpeedBoosts() * friction * movelength;
+
+        if (QA_IsCrouching(cmd) && !sliding)
+        {
+            speedmult *= Q_CrouchSpeedMult;
+        }
+        
+        vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
+        Bob(accel);
+
+        if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
+    }
+
+
+    void QA_SetRoll(Usercmd cmd)
+    {
+        vector2 velxy   = (vel.x, vel.y);
+
+        vector2 forward      = (cos(Angle), sin(Angle));
+        double  forwardSpeed = velxy dot forward;
+
+        vector2 side      = velxy - (forward * forwardSpeed);
+        double  sideSpeed = side.length();
+
+        if (deltaangle(atan2(forward.y, forward.x), atan2(side.y, side.x)) > 0) { sideSpeed *= -1; }
+
+        double desiredRoll = clamp(sideSpeed / 8, -5, 5);
+        double rollDiff = clamp(desiredRoll - Roll, -22.5 / TICRATE, 22.5 / TICRATE);
+
+        A_SetRoll(Roll + rollDiff);
+    }
+}

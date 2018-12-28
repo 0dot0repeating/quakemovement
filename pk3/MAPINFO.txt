@@ -1,0 +1,4 @@
+gameinfo
+{
+    AddPlayerClasses = "Q1AccelPlayer", "Q2AccelPlayer", "Q4AccelPlayer", "QCSliderAccelPlayer"
+}

@@ -1,0 +1,13 @@
+*.pk[37]
+*.zip
+nocommit/*
+core.*
+zandronum-crash*
+!addons/*
+*.lnk
+*.backup?
+*.dbs
+*.bkp
+*.bak
+make.sh
+desktop.ini

@@ -1,0 +1,173 @@
+class Q1AccelPlayer: QuakeAccelPlayer
+{
+    // lmao copypaste
+
+    Default
+    {
+        Speed 1;
+        Health 100;
+        Radius 16;
+        Height 56;
+        Mass 100;
+        PainChance 255;
+        Player.DisplayName "Q1 Movement";
+        Player.CrouchSprite "PLYC";
+        Player.StartItem "Pistol";
+        Player.StartItem "Fist";
+        Player.StartItem "Clip", 50;
+        Player.WeaponSlot 1, "Fist", "Chainsaw";
+        Player.WeaponSlot 2, "Pistol";
+        Player.WeaponSlot 3, "Shotgun", "SuperShotgun";
+        Player.WeaponSlot 4, "Chaingun";
+        Player.WeaponSlot 5, "RocketLauncher";
+        Player.WeaponSlot 6, "PlasmaRifle";
+        Player.WeaponSlot 7, "BFG9000";
+
+        Player.ColorRange 112, 127;
+        Player.Colorset 0, "Green",         0x70, 0x7F,  0x72;
+        Player.Colorset 1, "Gray",          0x60, 0x6F,  0x62;
+        Player.Colorset 2, "Brown",         0x40, 0x4F,  0x42;
+        Player.Colorset 3, "Red",           0x20, 0x2F,  0x22;
+        // Doom Legacy additions
+        Player.Colorset 4, "Light Gray",    0x58, 0x67,  0x5A;
+        Player.Colorset 5, "Light Brown",   0x38, 0x47,  0x3A;
+        Player.Colorset 6, "Light Red",     0xB0, 0xBF,  0xB2;
+        Player.Colorset 7, "Light Blue",    0xC0, 0xCF,  0xC2;
+    }
+
+    States
+    {
+      Spawn:
+        PLAY A -1;
+        loop;
+
+      See:
+        PLAY ABCD 4;
+        loop;
+
+      Missile:
+        PLAY E 12;
+        goto Spawn;
+
+      Melee:
+        PLAY F 6 BRIGHT;
+        goto Missile;
+
+      Pain:
+        PLAY G 4;
+        PLAY G 4 A_Pain;
+        goto Spawn;
+
+      Death:
+        PLAY H 0 A_PlayerSkinCheck("AltSkinDeath");
+        goto Death1;
+
+      Death1:
+        PLAY H 10;
+        PLAY I 10 A_PlayerScream;
+        PLAY J 10 A_NoBlocking;
+        PLAY KLM 10;
+        PLAY N -1;
+        stop;
+
+      XDeath:
+        PLAY O 0 A_PlayerSkinCheck("AltSkinXDeath");
+        goto XDeath1;
+
+      XDeath1:
+        PLAY O 5;
+        PLAY P 5 A_XScream;
+        PLAY Q 5 A_NoBlocking;
+        PLAY RSTUV 5;
+        PLAY W -1;
+        stop;
+
+      AltSkinDeath:
+        PLAY H 6;
+        PLAY I 6 A_PlayerScream;
+        PLAY JK 6;
+        PLAY L 6 A_NoBlocking;
+        PLAY MNO 6;
+        PLAY P -1;
+        stop;
+
+      AltSkinXDeath:
+        PLAY Q 5 A_PlayerScream;
+        PLAY R 0 A_NoBlocking;
+        PLAY R 5 A_SkullPop;
+        PLAY STUVWX 5;
+        PLAY Y -1;
+        stop;
+    }
+}
+
+
+class Q2AccelPlayer: Q1AccelPlayer
+{
+    Default
+    {
+        Player.DisplayName "Q2 Movement";
+        
+        QuakeAccelPlayer.AirSpeed        440;
+        QuakeAccelPlayer.MaxAirSpeed     440;
+        
+        QuakeAccelPlayer.GroundFriction  0.111397; 
+        
+        QuakeAccelPlayer.DoubleJumpFactor  1;
+        QuakeAccelPlayer.MidairStepHeight  16;
+    }
+}
+
+class Q4AccelPlayer: Q1AccelPlayer
+{
+    Default
+    {
+        Player.DisplayName "Q4 Movement";
+        
+        QuakeAccelPlayer.AirSpeed        440;
+        QuakeAccelPlayer.MaxAirSpeed     440;
+        
+        QuakeAccelPlayer.GroundFriction  0.109647;
+        QuakeAccelPlayer.CSlideFriction  0.687355;
+        
+        QuakeAccelPlayer.MidairStepHeight     16;
+        
+        // these values are just guesses, since Q4 never had its source released
+        //  and I don't know where any hard values for these are
+        QuakeAccelPlayer.CrouchSlideTime      6;
+        QuakeAccelPlayer.CrouchSlideTimeScale 1.5;
+        QuakeAccelPlayer.CrouchSlideTimeMax   105;
+        
+        QuakeAccelPlayer.DoubleJumpFactor  0;
+        QuakeAccelPlayer.RampJumpFactor    0;
+        QuakeAccelPlayer.EasyCrouchSlide   true;   // not authentic, but who cares
+    }
+}
+
+
+class QCSliderAccelPlayer: Q1AccelPlayer
+{
+    Default
+    {
+        Player.DisplayName "QC Slider";
+        
+        QuakeAccelPlayer.AirSpeed           440;
+        QuakeAccelPlayer.MaxAirSpeed        440;
+        QuakeAccelPlayer.CSlideSpeed        4400;
+        QuakeAccelPlayer.MaxCSlideSpeed     440;
+        
+        QuakeAccelPlayer.GroundFriction  0.110963;
+        QuakeAccelPlayer.CSlideFriction  0.688636;
+        
+        QuakeAccelPlayer.MidairStepHeight     16;
+        
+        // also spitballing these
+        QuakeAccelPlayer.CrouchSlideTime      0;
+        QuakeAccelPlayer.CrouchSlideTimeScale 2.5;
+        QuakeAccelPlayer.CrouchSlideTimeMax   175;
+        
+        QuakeAccelPlayer.DoubleJumpFactor  0.5;
+        QuakeAccelPlayer.RampJumpFactor    0;
+        QuakeAccelPlayer.EasyCrouchSlide   true;   // still not authentic, still who cares
+    }
+}
