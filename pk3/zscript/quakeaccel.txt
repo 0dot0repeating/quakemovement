@@ -293,7 +293,6 @@ class QuakeAccelPlayer: PlayerPawn
     override void Tick()
     {
         if (Q_Enabled != Q_UseQuakeAccel) { QA_SetEnabled(Q_UseQuakeAccel); }
-        //Friction = Q_Enabled ? 50000 : Default.Friction;
         Super.Tick();
     }
 

@@ -1,4 +1,4 @@
 version "3.4"
 
 #include "zscript/quakeaccel.txt"
-#include "zscript/testshit.txt"
+#include "zscript/testclasses.txt"
