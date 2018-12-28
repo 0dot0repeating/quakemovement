@@ -1,3 +1,5 @@
+// if you touch this file, I will find you and I will pour rancid apple juice into your mattress
+
 gameinfo
 {
     AddPlayerClasses = "Q1AccelPlayer", "Q2AccelPlayer", "Q4AccelPlayer", "QCSliderAccelPlayer"
