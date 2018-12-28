@@ -66,13 +66,15 @@ or Slash in Quake Champions. The contexts are:
 
 - `MaxGroundSpeed`, `MaxAirSpeed`, `MaxFlySpeed`, `MaxWaterSpeed`, `MaxCSlideSpeed`: **double**
   - Your maximum speed in the five contexts. These values are in units/s.
+    Negative values represent no hard speed cap.
 
 - `GroundFriction`, `AirFriction`, `FlyFriction`, `WaterFriction`, `CSlideFriction`: **double**
   - Controls how quickly your speed degenerates in the five contexts. These values are
     in half-times (in seconds): that is to say, the values represent how many seconds it
     takes for friction to reduce your velocity to half of its current value. Higher values
     result in less friction. A table to quickly convert Quake friction values to half-time
-    values is at the bottom of this README.
+    values is at the bottom of this README.  
+    Values equal to or less than 0 mean "no friction".
 
 - `StopGroundSpeed`, `StopAirSpeed`, `StopFlySpeed`, `StopWaterSpeed`, `StopCSlideSpeed`: **double**
   - The friction functions will act like your speed is at least this value when slowing you down.
