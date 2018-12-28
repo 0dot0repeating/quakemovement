@@ -11,6 +11,19 @@ you can play it to see what it's like.
 **Packaged downloads:** http://jinotra.in/downloads/mods/doom/quakemovement
 
 
+## Building your own PK3
+
+Above the latest-commit bar, on the very right, there's a download icon.
+
+Click that, choose ".ZIP", then unzip the ZIP file into its own directory.
+
+Go into the pk3/ directory, select everything in there, and zip it all up.
+Change the extension of the new ZIP file to ".pk3", and you should be good to go.
+
+If, in the ZIP you created, everything's still in the "pk3/" folder, you zipped
+the folder, not its contents. Don't do that.
+
+
 ## Documentation
 
 Most of this is covered in quakeaccel.txt as well.
