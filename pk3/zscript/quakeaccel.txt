@@ -587,7 +587,7 @@ class QuakeAccelPlayer: PlayerPawn
             }
         }
 
-        return (0, 0, 1), false;
+        return (0, 0, 1), player.onGround;
     }
 
 
