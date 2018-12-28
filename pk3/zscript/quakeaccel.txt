@@ -579,7 +579,7 @@ class QuakeAccelPlayer: PlayerPawn
             [fas_floorz, fas_sector] = floorsector.NextLowestFloorAt(pos.x, pos.y, pos.z, FFCF_3DRESTRICT, MaxStepHeight);
 
             vector3 normal = fas_sector.floorplane.Normal;
-            double floorPitch = 90 - atan2(normal.z, (normal.x, normal.y).length());
+            double floorPitch = atan2(normal.xy.length(), normal.z);
 
             if (pos.z <= fas_floorz)
             {
