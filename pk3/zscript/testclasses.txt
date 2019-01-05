@@ -134,7 +134,7 @@ class Q4AccelPlayer: Q1AccelPlayer
 {
     Default
     {
-        Player.DisplayName "Q4 Movement";
+        Player.DisplayName "Q3/Q4 Movement";
         
         QuakeAccelPlayer.AirSpeed        440; // 1/10 of base accel
         QuakeAccelPlayer.MaxAirSpeed     440; // same as base speed
