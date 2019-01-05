@@ -172,6 +172,12 @@ or Slash in Quake Champions. The contexts are:
     Turning this on uses Quake 1's behavior, and keeping it off uses Quake 3's.
 
 
+- `Q2Wading`: **boolean**  
+    In Quake 2, when swimming on the surface of a body of water and holding jump, your
+    Z velocity gets clamped, keeping you closer to the water than in other Quake games.
+    This simulates that.
+
+
 By default, QuakeAccelPlayer is configured to act similarly to Quakeworld's physics.
 See `pk3/zscript/testclasses.txt` for examples of how to configure it to act similarly
 to the other Quake games.

@@ -82,6 +82,7 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
     bool   Q_MagneticLedges;   // when enabled, your friction is doubled if you're about to walk off a ledge
     bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
+    bool   Q_Q2Wading;         // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
 
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
@@ -129,6 +130,7 @@ class QuakeAccelPlayer: PlayerPawn
     property FlawedAirMove:    Q_FlawedAirMove;
     property MagneticLedges:   Q_MagneticLedges;
     property InstantZAdjust:   Q_InstantZAdjust;
+    property Q2Wading:         Q_Q2Wading;
 
     Default
     {
@@ -784,7 +786,9 @@ class QuakeAccelPlayer: PlayerPawn
         if (surfacing)
         {
             QA_GravityMove();
-            vel.z -= GetGravity();
+            if (Q_Q2Wading) { vel.z = min(0, vel.z - GetGravity()); }
+            else            { vel.z -= GetGravity(); }
+            
             return;
         }
         
@@ -912,6 +916,13 @@ class QuakeAccelPlayer: PlayerPawn
             friction  = QA_Friction(Q_AirFriction, Q_StopAirSpeed);
             wishspeed = Q_AirSpeed;
             maxspeed  = Q_MaxAirSpeed;
+        }
+        
+        if (waterlevel)
+        {
+            double waterfriction = QA_HalftimeToFriction(Q_WaterFriction, TICRATE) * (waterlevel / 3.0);
+            double halftime      = QA_FrictionToHalftime(waterfriction, TICRATE);   
+            friction *= QA_Friction(halftime, Q_StopWaterSpeed);
         }
         
         double speedmult = QA_GetSpeedBoosts() * friction * movelength;

@@ -125,6 +125,8 @@ class Q2AccelPlayer: Q1AccelPlayer
         
         QuakeAccelPlayer.DoubleJumpFactor  1;
         QuakeAccelPlayer.MidairStepHeight  16;
+        
+        QuakeAccelPlayer.Q2Wading       true;
     }
 }
 
