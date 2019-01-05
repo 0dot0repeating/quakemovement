@@ -154,6 +154,7 @@ class Q4AccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.DoubleJumpFactor  0;
         QuakeAccelPlayer.RampJumpFactor    0;
         QuakeAccelPlayer.EasyCrouchSlide   true;   // not authentic, but who cares
+        QuakeAccelPlayer.InstantZAdjust    false;
     }
 }
 
@@ -182,5 +183,6 @@ class QCSliderAccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.DoubleJumpFactor  0.5;
         QuakeAccelPlayer.RampJumpFactor    0;
         QuakeAccelPlayer.EasyCrouchSlide   true;   // still not authentic, still who cares
+        QuakeAccelPlayer.InstantZAdjust    false;  // not like there's anywhere to swim in quack chumps
     }
 }

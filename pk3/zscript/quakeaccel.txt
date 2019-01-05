@@ -6,6 +6,14 @@
 
 class QuakeAccelPlayer: PlayerPawn
 {
+    enum QuakeMoveFlags
+    {
+        QMF_FLYING       = 0x1,
+        QMF_FLAWEDXY     = 0x2,
+        QMF_IGNOREJUMP   = 0x4,
+        QMF_IGNORECROUCH = 0x8,
+    };
+    
     const MAXMOVE                = 0x3200;        // purely for scaling the movement commands
     const DEFAULT_FRICTION       = 0.90625;       // default friction, used for scaling our friction
     const DEFAULT_MOVEMULT       = 0.03125;       // default movement speed mult, also used for friction scaling
@@ -73,6 +81,7 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_FlawedAirMove;    // replicate quake 3 behavior where holding jump midair slows horizontal movement
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
     bool   Q_MagneticLedges;   // when enabled, your friction is doubled if you're about to walk off a ledge
+    bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
 
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
@@ -119,6 +128,7 @@ class QuakeAccelPlayer: PlayerPawn
     property EasyCrouchSlide:  Q_EasyCrouchSlide;
     property FlawedAirMove:    Q_FlawedAirMove;
     property MagneticLedges:   Q_MagneticLedges;
+    property InstantZAdjust:   Q_InstantZAdjust;
 
     Default
     {
@@ -193,6 +203,7 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
         QuakeAccelPlayer.MagneticLedges    false;
+        QuakeAccelPlayer.InstantZAdjust    true;
     }
     
     
@@ -294,22 +305,22 @@ class QuakeAccelPlayer: PlayerPawn
     }
 
 
-    static clearscope vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, bool flying = false, bool flawedXY = false)
+    static clearscope vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, int flags = 0)
     {
         vector3 movedir;
 
-        if (flying)
+        if (flags & QMF_FLYING)
         {
             movedir = QA_Rotate3D((cmd.forwardmove, -cmd.sidemove, 0), angle, pitch);
             if (abs(cmd.upmove) >= (MAXMOVE / 4)) { movedir.z = cmd.upmove; }
             
-            if (cmd.buttons & BT_JUMP)   { movedir.z += 6400; }
-            if (cmd.buttons & BT_CROUCH) { movedir.z -= 6400; }
+            if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { movedir.z += 6400; }
+            if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { movedir.z -= 6400; }
         }
         else
         {
             vector2 movedir_xy = RotateVector((cmd.forwardmove, -cmd.sidemove), angle);
-            movedir = (movedir_xy.x, movedir_xy.y, flawedXY ? cmd.upmove : 0);
+            movedir = (movedir_xy.x, movedir_xy.y, (flags & QMF_FLAWEDXY) ? cmd.upmove : 0);
         }
 
         movedir /= (MAXMOVE * QA_Turbo());
@@ -319,7 +330,7 @@ class QuakeAccelPlayer: PlayerPawn
 
         double movescalar = 1;
 
-        if (flawedXY)
+        if (flags & QMF_FLAWEDXY)
         {
             movedir.z  = 0;
             movescalar = movedir.length() / movelength;
@@ -767,7 +778,8 @@ class QuakeAccelPlayer: PlayerPawn
         vector3 movedir = (0,0,0);
         double  movelength = 0;
         
-        bool surfacing = waterlevel <= 1 && !bNoGravity && !bNoclip;
+        bool swimming  = waterlevel && !(bNoclip && bNoGravity);
+        bool surfacing = swimming && waterlevel <= 1 && !bNoGravity;
         
         if (surfacing)
         {
@@ -780,12 +792,15 @@ class QuakeAccelPlayer: PlayerPawn
         
         if (reactiontime <= 0)
         {
-            [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, true);
+            int flags = QMF_FLYING;
+            if (swimming & Q_InstantZAdjust) { flags |= QMF_IGNOREJUMP | QMF_IGNORECROUCh; }
+            
+            [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, flags);
         }
 
         double speedmult, wishspeed, maxspeed, friction;
 
-        if (waterlevel && !(bNoclip && bNoGravity))
+        if (swimming)
         {
             double halftime = Q_WaterFriction;
             
@@ -813,6 +828,19 @@ class QuakeAccelPlayer: PlayerPawn
         Bob(accel.xy);
 
         if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
+        
+        if (reactiontime <= 0 && swimming && Q_InstantZAdjust)
+        {
+            int direction = 0;
+            if (cmd.buttons & BT_JUMP) { direction++; }
+            if (cmd.buttons & BT_CROUCH) { direction--; }
+            
+            if (direction)
+            {
+                vel.z = direction * JumpZ / 3;
+                PlayRunning();
+            }
+        }
         
         // TODO: remove this when/if +DONTSINK gets added
         if (!(cmd.forwardmove || cmd.sidemove)) { cmd.forwardmove = 1; }
@@ -846,7 +874,7 @@ class QuakeAccelPlayer: PlayerPawn
         {
             if (reactiontime <= 0)
             {
-                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, false, false);
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch);
             }
             
             int slideTimeLimit = Q_CrouchSlideTime + int(Q_FallTime * Q_CrouchSlideTimeScale);
@@ -878,7 +906,7 @@ class QuakeAccelPlayer: PlayerPawn
         {
             if (reactiontime <= 0)
             {
-                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, false, Q_FlawedAirMove);
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, (Q_FlawedAirMove ? QMF_FLAWEDXY : 0));
             }
 
             friction  = QA_Friction(Q_AirFriction, Q_StopAirSpeed);

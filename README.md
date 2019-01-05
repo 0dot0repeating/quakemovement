@@ -159,10 +159,17 @@ or Slash in Quake Champions. The contexts are:
     when using the autohop feature in Quake Live and Quake Champions, since otherwise, the
     engine acts like you let go of the jump button the moment you jump.
 
-- `MagneticLedges`: **boolean**
+
+- `MagneticLedges`: **boolean**  
     Quake 1, and to my knowledge none of the other Quake games, has a nice feature where
     if it detects that you're about to run off a ledge, it doubles your friction in an
     attempt to prevent you from doing so accidentally. This flag enables that behavior.
+
+
+- `InstantZAdjust`: **boolean**  
+    Quake 1 and Quake 2 set your Z velocity to constant values if you hit jump or crouch
+    when in the water. Quake 3 and beyond just make your wish direction point upwards.
+    Turning this on uses Quake 1's behavior, and keeping it off uses Quake 3's.
 
 
 By default, QuakeAccelPlayer is configured to act similarly to Quakeworld's physics.
