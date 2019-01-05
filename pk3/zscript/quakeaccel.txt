@@ -425,10 +425,10 @@ class QuakeAccelPlayer: PlayerPawn
     bool QA_IsCrouching(UserCmd cmd)
     {
         if (player.IsTotallyFrozen() || player.crouchfactor == -1) { return false; }
-        int crouchdir = (cmd.buttons & BT_CROUCH) ? -1 : 1;
+        int crouchdir = (cmd.buttons & BT_CROUCH) && CanCrouch() && level.IsCrouchingAllowed() ? -1 : 1;
 
         // wants to crouch
-        if (crouchdir == -1) { return player.crouchfactor <= 1; }
+        if (crouchdir == -1) { return player.crouchfactor < 1; }
 
         // wants to uncrouch
         return player.crouchfactor <= 0.5;
