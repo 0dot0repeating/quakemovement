@@ -297,16 +297,22 @@ class QuakeAccelPlayer: PlayerPawn
     }
 
 
-    void Bob(vector3 addVel)
+    void Bob(vector2 addVel)
     {
-        player.Vel += (addVel.x, addVel.y);
+        player.Vel += addVel;
+    }
+    
+    void SetBob(vector2 vel)
+    {
+        player.Vel = vel;
     }
 
     void ReduceBob(double bobFactor)
     {
         player.Vel *= bobFactor;
     }
-
+    
+    
     // Override to make (un)crouching faster
     override void CheckCrouch(bool totallyfrozen)
     {
@@ -654,8 +660,11 @@ class QuakeAccelPlayer: PlayerPawn
             vector3 noRampVel  = (vel.x, vel.y, jumpvelz + max(0, startvel.z * Q_DoubleJumpFactor));
             vector3 noRampDiff = rampVel - noRampVel;
             
-            vel = noRampVel + (noRampDiff * Q_RampJumpFactor);
-
+            vector3 newVel  = noRampVel + (noRampDiff * Q_RampJumpFactor);
+            vector3 velDiff = newvel - vel;
+            Bob(velDiff.xy);
+            vel = newVel;
+            
             if (!Q_Autohop) { Q_BlockJump  = true; }
             if (!(player.cheats & CF_PREDICTING)) { A_PlaySound("*jump", CHAN_BODY); }
 
@@ -705,7 +714,7 @@ class QuakeAccelPlayer: PlayerPawn
         if (QA_IsCrouching(cmd)) { speedmult *= Q_CrouchSpeedMult; }
 
         vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
-        Bob(accel);
+        Bob(accel.xy);
 
         if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
     }
@@ -780,7 +789,7 @@ class QuakeAccelPlayer: PlayerPawn
         }
         
         vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
-        Bob(accel);
+        Bob(accel.xy);
 
         if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
     }
