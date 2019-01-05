@@ -46,6 +46,7 @@ Most of them are self-explanatory, but `CSlide` is only familiar to those famili
 or Slash in Quake Champions. The contexts are:
 
 - `Ground`: When on the ground.
+- `Crouch`: When on the ground and crouching.
 - `Air`: When freefalling.
 - `Fly`: When flying (Wings of Wrath, `fly`, `noclip2`, etc).
 - `Water`: When swimming.
@@ -62,16 +63,16 @@ or Slash in Quake Champions. The contexts are:
     When enabled, use Quake physics. When disabled, use Doom physics.
 
 
-- `GroundSpeed`, `AirSpeed`, `FlySpeed`, `WaterSpeed`, `CSlideSpeed`: **double**  
+- `GroundSpeed`, `CrouchSpeed`, `AirSpeed`, `FlySpeed`, `WaterSpeed`, `CSlideSpeed`: **double**  
     Your maximum acceleration in the five contexts. These values are in units/s^2.
 
 
-- `MaxGroundSpeed`, `MaxAirSpeed`, `MaxFlySpeed`, `MaxWaterSpeed`, `MaxCSlideSpeed`: **double**  
+- `MaxGroundSpeed`, `MaxCrouchSpeed`, `MaxAirSpeed`, `MaxFlySpeed`, `MaxWaterSpeed`, `MaxCSlideSpeed`: **double**  
     Your maximum speed in the five contexts. These values are in units/s.
     Negative values represent no hard speed cap.
 
 
-- `GroundFriction`, `AirFriction`, `FlyFriction`, `WaterFriction`, `CSlideFriction`: **double**  
+- `GroundFriction`, `CrouchFriction`, `AirFriction`, `FlyFriction`, `WaterFriction`, `CSlideFriction`: **double**  
     Controls how quickly your speed degenerates in the five contexts. These values are
     in half-times (in seconds): that is to say, the values represent how many seconds it
     takes for friction to reduce your velocity to half of its current value. Higher values
@@ -81,7 +82,7 @@ or Slash in Quake Champions. The contexts are:
     Values equal to or less than 0 mean "no friction".
 
 
-- `StopGroundSpeed`, `StopAirSpeed`, `StopFlySpeed`, `StopWaterSpeed`, `StopCSlideSpeed`: **double**  
+- `StopGroundSpeed`, `StopCrouchSpeed`, `StopAirSpeed`, `StopFlySpeed`, `StopWaterSpeed`, `StopCSlideSpeed`: **double**  
     The friction functions will act like your speed is at least this value when slowing you down.
     For example, a value of 200 means that you'll be treated as moving at 200 units/s if you're
     moving slower than that, and you will be slowed down accordingly. These values are in units/s.
@@ -114,10 +115,6 @@ or Slash in Quake Champions. The contexts are:
     to however fast you were going up/down the ramp, allowing for dramatically boosted jump heights
     when jumping up a ramp. This setting scales how much that factors in; for example, 0.5 means
     50% of your Z velocity from running up a ramp gets added to your jump velocity.
-
-
-- `CrouchSpeedMult`: **double**  
-    Scales your speed and max speed values when crouching in all contexts but the `CSlide` context.
 
 
 - `CrouchSlideTime`: **int**  

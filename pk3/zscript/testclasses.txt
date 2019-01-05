@@ -114,10 +114,17 @@ class Q2AccelPlayer: Q1AccelPlayer
     {
         Player.DisplayName "Q2 Movement";
         
-        QuakeAccelPlayer.AirSpeed        440;
-        QuakeAccelPlayer.MaxAirSpeed     440;
+        QuakeAccelPlayer.AirSpeed        440; // 1/10 of base accel
+        QuakeAccelPlayer.MaxAirSpeed     440; // same as base speed
         
-        QuakeAccelPlayer.GroundFriction  0.111397; 
+        // quake 2 water speed/accel is actually half the ground values, unlike
+        //  quake 1 where water speed/accel are the same as the ground values
+        
+        QuakeAccelPlayer.GroundFriction  0.111397; // 6 @ 85fps
+        QuakeAccelPlayer.WaterFriction   0.226947; // 3 @ 85fps
+        
+        // quake 2 water friction is actually based on how deep you're in the water,
+        //  but fuck that, I'm just gonna use the value it's normally at (3)
         
         QuakeAccelPlayer.DoubleJumpFactor  1;
         QuakeAccelPlayer.MidairStepHeight  16;
@@ -130,11 +137,19 @@ class Q4AccelPlayer: Q1AccelPlayer
     {
         Player.DisplayName "Q4 Movement";
         
-        QuakeAccelPlayer.AirSpeed        440;
-        QuakeAccelPlayer.MaxAirSpeed     440;
+        QuakeAccelPlayer.AirSpeed        440; // 1/10 of base accel
+        QuakeAccelPlayer.MaxAirSpeed     440; // same as base speed
         
-        QuakeAccelPlayer.GroundFriction  0.109647;
-        QuakeAccelPlayer.CSlideFriction  0.687355;
+        QuakeAccelPlayer.WaterSpeed      880; // 1/5  of base accel
+        QuakeAccelPlayer.MaxWaterSpeed   220; // half of base speed
+        
+        QuakeAccelPlayer.GroundFriction  0.109647; // 6 @ 60fps
+        QuakeAccelPlayer.WaterFriction   0.225223; // 3 @ 60fps
+        
+        // quake 3 water friction acts identically to quake 2 water friction, and
+        //  I assume it's the same in quake 4 because I don't feel like testing it
+        //
+        // either way, I'm ignoring that behaviour identically as well
         
         QuakeAccelPlayer.MidairStepHeight     16;
         
@@ -157,13 +172,13 @@ class QCSliderAccelPlayer: Q1AccelPlayer
     {
         Player.DisplayName "QC Slider";
         
-        QuakeAccelPlayer.AirSpeed           440;
-        QuakeAccelPlayer.MaxAirSpeed        440;
-        QuakeAccelPlayer.CSlideSpeed        4400;
-        QuakeAccelPlayer.MaxCSlideSpeed     440;
+        QuakeAccelPlayer.AirSpeed           440;  // 1/10 of base accel
+        QuakeAccelPlayer.MaxAirSpeed        440;  // same as base speed
+        QuakeAccelPlayer.CSlideSpeed        4400; // same as base accel
+        QuakeAccelPlayer.MaxCSlideSpeed     440;  // same as base speed
         
-        QuakeAccelPlayer.GroundFriction  0.110963;
-        QuakeAccelPlayer.CSlideFriction  0.688636;
+        QuakeAccelPlayer.GroundFriction  0.110963; // 6 @ 77fps
+        QuakeAccelPlayer.CSlideFriction  0.688636; // 1 @ 77fps
         
         QuakeAccelPlayer.MidairStepHeight     16;
         
