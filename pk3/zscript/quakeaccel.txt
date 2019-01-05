@@ -429,16 +429,8 @@ class QuakeAccelPlayer: PlayerPawn
         {
             if (!totallyfrozen)
             {
-                int crouchdir = player.crouching;
-
-                if (crouchdir == 0)
-                {
-                    crouchdir = (cmd.buttons & BT_CROUCH) ? -1 : 1;
-                }
-                else if (cmd.buttons & BT_CROUCH)
-                {
-                    player.crouching = 0;
-                }
+                int crouchdir = (cmd.buttons & BT_CROUCH) && !(cmd.buttons & BT_JUMP) ? -1 : 1;
+                
                 if (crouchdir == 1 && player.crouchfactor < 1 && pos.Z + height < ceilingz)
                 {
                     CrouchMove(4);
@@ -703,7 +695,7 @@ class QuakeAccelPlayer: PlayerPawn
     {
         UserCmd cmd = player.cmd;
 
-        if (player.onGround && (cmd.buttons & BT_JUMP) && level.IsJumpingAllowed() && !Q_BlockJump)
+        if (player.onGround && (cmd.buttons & BT_JUMP) && !(cmd.buttons & BT_CROUCH) && level.IsJumpingAllowed() && !Q_BlockJump)
         {
             vector3 floornormal;
             bool canjump;
