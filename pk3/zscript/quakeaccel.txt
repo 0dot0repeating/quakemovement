@@ -736,7 +736,7 @@ class QuakeAccelPlayer: PlayerPawn
         vector3 movedir = (0,0,0);
         double  movelength = 0;
         
-        bool surfacing = waterlevel <= 1 && !bNoGravity;
+        bool surfacing = waterlevel <= 1 && !bNoGravity && !bNoclip;
         
         if (surfacing)
         {
@@ -756,7 +756,15 @@ class QuakeAccelPlayer: PlayerPawn
 
         if (waterlevel && !(bNoclip && bNoGravity))
         {
-            friction  = QA_Friction(Q_WaterFriction, Q_StopWaterSpeed, true);
+            double halftime = Q_WaterFriction;
+            
+            if (waterlevel < 3)
+            {
+                double friction = QA_HalftimeToFriction(halftime, TICRATE) * (waterlevel / 3.0);
+                halftime = QA_FrictionToHalftime(friction, TICRATE);
+            }
+            
+            friction  = QA_Friction(halftime, Q_StopWaterSpeed, true);
             wishspeed = Q_WaterSpeed;
             maxspeed  = Q_MaxWaterSpeed;
         }
@@ -774,6 +782,9 @@ class QuakeAccelPlayer: PlayerPawn
         Bob(accel.xy);
 
         if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
+        
+        // TODO: remove this when/if +DONTSINK gets added
+        if (!(cmd.forwardmove || cmd.sidemove)) { cmd.forwardmove = 1; }
     }
 
 
