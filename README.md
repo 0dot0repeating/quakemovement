@@ -159,6 +159,11 @@ or Slash in Quake Champions. The contexts are:
     when using the autohop feature in Quake Live and Quake Champions, since otherwise, the
     engine acts like you let go of the jump button the moment you jump.
 
+- `MagneticLedges`: **boolean**
+    Quake 1, and to my knowledge none of the other Quake games, has a nice feature where
+    if it detects that you're about to run off a ledge, it doubles your friction in an
+    attempt to prevent you from doing so accidentally. This flag enables that behavior.
+
 
 By default, QuakeAccelPlayer is configured to act similarly to Quakeworld's physics.
 See `pk3/zscript/testclasses.txt` for examples of how to configure it to act similarly
