@@ -191,15 +191,58 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
     }
+    
+    
+    // this is here mostly to remind myself how I got these functions
+    //
+    // friction: endSpeed = startSpeed * (1 - (qfriction * frametime))  (how quake does it)
+    //   or:     endSpeed = startSpeed * (1 - (qfriction / ticrate))
+    //
+    // so friction = qfriction / ticrate
+    //
+    // quake's friction values get plugged directly into that, but we use halftimes,
+    //  so some math is needed
+    // 
+    // (1 - friction) ** (halftime * ticrate) = 0.5
+    //  1 - friction =   0.5 ** (1 / (halftime * ticrate))
+    //    - friction =   0.5 ** (1 / (halftime * ticrate))  - 1
+    //      friction = -(0.5 ** (1 / (halftime * ticrate))) + 1
+    //
+    // to get halftime from a friction value and ticrate:
+    //
+    // (1 - friction) ** (halftime * ticrate) = 0.5     // a ** b = c
+    // halftime * ticrate = log[1 - friction](0.5)      // log[a](c) = b
+    // halftime = log[1 - friction](0.5) / ticrate
+    
+    
+    static clearscope double QA_HalftimeToFriction(double halftime, int fps)
+    {
+        return -(0.5 ** (1 / (halftime * fps))) + 1;
+    }
+    
+    static clearscope double QA_FrictionToHalftime(double friction, int fps)
+    {
+        return log(0.5) / (log(1 - friction) * fps);
+    }
+    
+    static clearscope double QA_HalftimeToQFriction(double halftime, int fps)
+    {
+        return QA_HalftimeToFriction(halftime, fps) * fps;
+    }
+    
+    static clearscope double QA_QFrictionToHalftime(double qfriction, int fps)
+    {
+        return QA_FrictionToHalftime(qfriction / fps, fps);
+    }
 
 
-    static double QA_Turbo()
+    static clearscope double QA_Turbo()
     {
         return CVar.FindCVar("turbo").GetFloat() / 100;
     }
 
 
-    static vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
+    static clearscope vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
     {
         // x' =  cos(angle) cos(pitch)x + -sin(angle)y + cos(angle) sin(pitch)z
         // y' =  sin(angle) cos(pitch)x +  cos(angle)y + sin(angle) sin(pitch)z
@@ -248,7 +291,7 @@ class QuakeAccelPlayer: PlayerPawn
     }
 
 
-    static vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, bool flying = false, bool flawedXY = false)
+    static clearscope vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, bool flying = false, bool flawedXY = false)
     {
         vector3 movedir;
 
@@ -533,8 +576,7 @@ class QuakeAccelPlayer: PlayerPawn
             return speedMult;
         }
 
-        // base equation: (1 - friction) ** (halftime * TICRATE) = 0.5
-        double friction = -(0.5 ** (1/(halftime * TICRATE))) + 1;
+        double friction = QA_HalftimeToFriction(halftime, TICRATE);
 
         double baseSpeed  = vel.length() * TICRATE;
         double startSpeed = baseSpeed > stopspeed ? baseSpeed : stopspeed;
