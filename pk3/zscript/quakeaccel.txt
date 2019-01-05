@@ -712,7 +712,7 @@ class QuakeAccelPlayer: PlayerPawn
 
         double speedmult, wishspeed, maxspeed, friction;
 
-        if (waterlevel)
+        if (waterlevel && !(bNoclip && bNoGravity))
         {
             friction  = QA_Friction(Q_WaterFriction, Q_StopWaterSpeed, true);
             wishspeed = Q_WaterSpeed;
