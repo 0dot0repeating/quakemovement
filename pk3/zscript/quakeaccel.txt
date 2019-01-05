@@ -72,6 +72,7 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_AutoSlide;        // you don't need to let go of crouch to repeatedly slide
     bool   Q_FlawedAirMove;    // replicate quake 3 behavior where holding jump midair slows horizontal movement
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
+    bool   Q_MagneticLedges;   // when enabled, your friction is doubled if you're about to walk off a ledge
 
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
@@ -117,6 +118,7 @@ class QuakeAccelPlayer: PlayerPawn
     property VQ1Bunnyhop:      Q_VQ1Bunnyhop;
     property EasyCrouchSlide:  Q_EasyCrouchSlide;
     property FlawedAirMove:    Q_FlawedAirMove;
+    property MagneticLedges:   Q_MagneticLedges;
 
     Default
     {
@@ -190,6 +192,7 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.VQ1Bunnyhop       false;
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
+        QuakeAccelPlayer.MagneticLedges    false;
     }
     
     
@@ -327,6 +330,34 @@ class QuakeAccelPlayer: PlayerPawn
 
         movelength = min(movelength, 1) * movescalar;
         return movedir.unit(), movelength;
+    }
+    
+    
+    bool QA_CheckDropoff()
+    {
+        // if we're standing on a thing, don't even bother, it'll just act weird
+        if (z > floorz) { return false; }
+        
+        double thresholdFloorZ = floorz;
+        double lowestFloorZ    = floorz;
+        
+        if (vel.xy.length() > 0)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                FCheckPosition checkResult;
+                vector2 newpos = pos.xy + (vel.xy.unit() * 8 * i);
+                CheckMove(newpos, PCM_NOACTORS, checkResult);
+                
+                double checkZ = checkResult.floorz;
+                
+                if (checkZ > floorz + MaxStepHeight) { break; }
+                if (checkZ > thresholdFloorZ) { thresholdFloorZ = checkZ; }
+                lowestFloorZ = min(lowestFloorZ, checkResult.floorz);
+            }
+        }
+        
+        return lowestFloorZ < thresholdFloorZ;
     }
 
 
@@ -808,6 +839,8 @@ class QuakeAccelPlayer: PlayerPawn
         {
             Q_CrouchSlideHeldTime = 0;
         }
+        
+        double dropoffFactor = (Q_MagneticLedges && QA_CheckDropoff()) ? 0.5 : 1;
 
         if (player.onground && (!QA_CheckJump() || Q_VQ1Bunnyhop))
         {
@@ -823,20 +856,20 @@ class QuakeAccelPlayer: PlayerPawn
             {
                 if (!Q_BlockSlide && Q_CrouchSlideHeldTime <= slideTimeLimit)
                 {
-                    friction  = QA_Friction(Q_CSlideFriction, Q_StopCSlideSpeed);
+                    friction  = QA_Friction(Q_CSlideFriction * dropoffFactor, Q_StopCSlideSpeed);
                     wishspeed = Q_CSlideSpeed;
                     maxspeed  = Q_MaxCSlideSpeed;
                 }
                 else
                 {
-                    friction  = QA_Friction(Q_CrouchFriction, Q_StopCrouchSpeed);
+                    friction  = QA_Friction(Q_CrouchFriction * dropoffFactor, Q_StopCrouchSpeed);
                     wishspeed = Q_CrouchSpeed;
                     maxspeed  = Q_MaxCrouchSpeed;
                 }
             }
             else
             {
-                friction  = QA_Friction(Q_GroundFriction, Q_StopGroundSpeed);
+                friction  = QA_Friction(Q_GroundFriction * dropoffFactor, Q_StopGroundSpeed);
                 wishspeed = Q_GroundSpeed;
                 maxspeed  = Q_MaxGroundSpeed;
             }
