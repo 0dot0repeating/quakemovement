@@ -132,6 +132,10 @@ or Slash in Quake Champions. The contexts are:
     adds to your crouch slide time; for example, a value of 2 means for every tic you fall,
     you can crouch slide for two more tics. This rounds down when added to your crouch slide time.
 
+    
+- `WadingSpeedScale`: **double**  
+    Scales your speed when wading through water (waterlevel = 1).
+
 
 - `Autohop`: **boolean**  
     When off, you need to let go and re-press jump between jumps. When on, you don't.
@@ -172,7 +176,7 @@ or Slash in Quake Champions. The contexts are:
     Turning this on uses Quake 1's behavior, and keeping it off uses Quake 3's.
 
 
-- `Q2Wading`: **boolean**  
+- `Q2SurfaceTension`: **boolean**  
     In Quake 2, when swimming on the surface of a body of water and holding jump, your
     Z velocity gets clamped, keeping you closer to the water than in other Quake games.
     This simulates that.

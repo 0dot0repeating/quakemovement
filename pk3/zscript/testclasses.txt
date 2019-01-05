@@ -126,7 +126,7 @@ class Q2AccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.DoubleJumpFactor  1;
         QuakeAccelPlayer.MidairStepHeight  16;
         
-        QuakeAccelPlayer.Q2Wading       true;
+        QuakeAccelPlayer.Q2SurfaceTension   true;
     }
 }
 
@@ -138,6 +138,9 @@ class Q4AccelPlayer: Q1AccelPlayer
         
         QuakeAccelPlayer.AirSpeed        440; // 1/10 of base accel
         QuakeAccelPlayer.MaxAirSpeed     440; // same as base speed
+        
+        QuakeAccelPlayer.CrouchSpeed     1100; // 1/4 of base accel
+        QuakeAccelPlayer.MaxCrouchSpeed  110;  // 1/4 of base speed
         
         QuakeAccelPlayer.WaterSpeed      880; // 1/5  of base accel
         QuakeAccelPlayer.MaxWaterSpeed   220; // half of base speed

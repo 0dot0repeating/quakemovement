@@ -27,6 +27,7 @@ class QuakeAccelPlayer: PlayerPawn
     protected uint    Q_CrouchSlideHeldTime; // how many tics you've held crouch
     protected int     Q_GroundTime;          // positive = tics spent on ground, negative = tics spent off ground
     protected int     Q_FallTime;            // time spent off ground with negative Z velocity
+    protected int     Q_WaterTime;           // positive = tics spent with waterlevel > 1, negative = tics spent with waterlevel <= 1
     protected vector3 Q_LastVel;
 
     // Q_BlockJump is only set if Q_Autohop is off
@@ -74,6 +75,7 @@ class QuakeAccelPlayer: PlayerPawn
     uint   Q_CrouchSlideTime;       // minimum amount of tics you can slide for after hitting the ground
     double Q_CrouchSlideTimeScale;  // your fall time is multiplied by this and added to Q_CrouchSlideTime
     uint   Q_CrouchSlideTimeMax;    // does exactly what it says it does (it's in tics)
+    double Q_WadingSpeedScale;      // scales your speed when waterlevel = 1
 
     bool   Q_EasyCrouchSlide;  // slide time doesn't tick down if you hold crouch in midair
     bool   Q_Autohop;          // you don't need to let go of jump to repeatedly jump
@@ -82,7 +84,7 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
     bool   Q_MagneticLedges;   // when enabled, your friction is doubled if you're about to walk off a ledge
     bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
-    bool   Q_Q2Wading;         // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
+    bool   Q_Q2SurfaceTension; // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
 
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
@@ -122,6 +124,7 @@ class QuakeAccelPlayer: PlayerPawn
     property CrouchSlideTime:       Q_CrouchSlideTime;
     property CrouchSlideTimeScale:  Q_CrouchSlideTimeScale;
     property CrouchSlideTimeMax:    Q_CrouchSlideTimeMax;
+    property WadingSpeedScale:      Q_WadingSpeedScale;
 
     property Autohop:          Q_Autohop;
     property AutoSlide:        Q_AutoSlide;
@@ -130,7 +133,7 @@ class QuakeAccelPlayer: PlayerPawn
     property FlawedAirMove:    Q_FlawedAirMove;
     property MagneticLedges:   Q_MagneticLedges;
     property InstantZAdjust:   Q_InstantZAdjust;
-    property Q2Wading:         Q_Q2Wading;
+    property Q2SurfaceTension: Q_Q2SurfaceTension;
 
     Default
     {
@@ -198,6 +201,7 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.CrouchSlideTime        0;
         QuakeAccelPlayer.CrouchSlideTimeScale   0;
         QuakeAccelPlayer.CrouchSlideTimeMax     0;
+        QuakeAccelPlayer.WadingSpeedScale       0.666; // for parity with regular doomguy
 
         QuakeAccelPlayer.Autohop           false;
         QuakeAccelPlayer.AutoSlide         false;
@@ -316,8 +320,8 @@ class QuakeAccelPlayer: PlayerPawn
             movedir = QA_Rotate3D((cmd.forwardmove, -cmd.sidemove, 0), angle, pitch);
             if (abs(cmd.upmove) >= (MAXMOVE / 4)) { movedir.z = cmd.upmove; }
             
-            if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { movedir.z += 6400; }
-            if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { movedir.z -= 6400; }
+            if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { movedir.z += 12800; }
+            if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { movedir.z -= 12800; }
         }
         else
         {
@@ -470,7 +474,9 @@ class QuakeAccelPlayer: PlayerPawn
         bool wasOnGround = player.onground;
         player.onground = (pos.z <= floorz) || bOnMobj || bMBFBouncer || (player.cheats & CF_NOCLIP2);
         MaxStepHeight = (player.onground || waterlevel > 0) ? Default.MaxStepHeight : Q_MidairStepHeight;
+        
         Q_GroundTime  = player.onground ? max(0, Q_GroundTime) + 1 : min(0, Q_GroundTime) - 1;
+        Q_WaterTime   = waterlevel > 1  ? max(0, Q_WaterTime)  + 1 : min(0, Q_WaterTime)  - 1;
 
         if (Q_GroundTime < 0)
         {
@@ -786,8 +792,15 @@ class QuakeAccelPlayer: PlayerPawn
         if (surfacing)
         {
             QA_GravityMove();
-            if (Q_Q2Wading) { vel.z = min(0, vel.z - GetGravity()); }
-            else            { vel.z -= GetGravity(); }
+            
+            if (Q_WaterTime == -1 && Q_Q2SurfaceTension)
+            { 
+                vel.z = min(0, vel.z - GetGravity());
+            }
+            else
+            { 
+                vel.z -= GetGravity();
+            }
             
             return;
         }
@@ -873,8 +886,9 @@ class QuakeAccelPlayer: PlayerPawn
         }
         
         double dropoffFactor = (Q_MagneticLedges && QA_CheckDropoff()) ? 0.5 : 1;
+        bool   jumped = QA_CheckJump();
 
-        if (player.onground && (!QA_CheckJump() || Q_VQ1Bunnyhop))
+        if (player.onground && (!jumped || Q_VQ1Bunnyhop))
         {
             if (reactiontime <= 0)
             {
@@ -918,14 +932,16 @@ class QuakeAccelPlayer: PlayerPawn
             maxspeed  = Q_MaxAirSpeed;
         }
         
+        double speedmult = QA_GetSpeedBoosts() * friction * movelength;
+        
         if (waterlevel)
         {
             double waterfriction = QA_HalftimeToFriction(Q_WaterFriction, TICRATE) * (waterlevel / 3.0);
-            double halftime      = QA_FrictionToHalftime(waterfriction, TICRATE);   
-            friction *= QA_Friction(halftime, Q_StopWaterSpeed);
+            double halftime      = QA_FrictionToHalftime(waterfriction, TICRATE);
+            
+            QA_Friction(halftime, Q_StopWaterSpeed);
+            speedmult *= Q_WadingSpeedScale;
         }
-        
-        double speedmult = QA_GetSpeedBoosts() * friction * movelength;
         
         vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
         Bob(accel.xy);
