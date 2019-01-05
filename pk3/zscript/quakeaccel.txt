@@ -694,7 +694,7 @@ class QuakeAccelPlayer: PlayerPawn
     {
         UserCmd cmd = player.cmd;
 
-        if (player.onGround && (cmd.buttons & BT_JUMP) && !(cmd.buttons & BT_CROUCH) && level.IsJumpingAllowed() && !Q_BlockJump)
+        if (player.onGround && (cmd.buttons & BT_JUMP) && level.IsJumpingAllowed() && !Q_BlockJump)
         {
             vector3 floornormal;
             bool canjump;
