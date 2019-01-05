@@ -132,6 +132,15 @@ or Slash in Quake Champions. The contexts are:
     adds to your crouch slide time; for example, a value of 2 means for every tic you fall,
     you can crouch slide for two more tics. This rounds down when added to your crouch slide time.
 
+
+- `MagneticLedgeScale`: **boolean**  
+    Quake 1, and to my knowledge none of the other Quake games, has a nice feature where
+    if it detects that you're about to run off a ledge, it doubles your friction in an
+    attempt to prevent you from doing so accidentally. When set to a value greater than
+    0, this recreates that behavior (higher values means higher ledge friction).
+    
+    Don't set this to -1; that'll cause a divide by zero error.
+
     
 - `WadingSpeedScale`: **double**  
     Scales your speed when wading through water (waterlevel = 1).
@@ -161,12 +170,6 @@ or Slash in Quake Champions. The contexts are:
     your air acceleration, due to the engine zeroing out the Z component of your desired
     movement vector and reducing its length in the process. If you ever wondered why
     holding jump made your strafejumping suck... this is why.
-
-
-- `MagneticLedges`: **boolean**  
-    Quake 1, and to my knowledge none of the other Quake games, has a nice feature where
-    if it detects that you're about to run off a ledge, it doubles your friction in an
-    attempt to prevent you from doing so accidentally. This flag enables that behavior.
 
 
 - `InstantZAdjust`: **boolean**  

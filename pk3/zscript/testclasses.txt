@@ -123,8 +123,9 @@ class Q2AccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.GroundFriction  0.111397; // 6 @ 85fps
         QuakeAccelPlayer.WaterFriction   0.226947; // 3 @ 85fps
         
-        QuakeAccelPlayer.DoubleJumpFactor  1;
-        QuakeAccelPlayer.MidairStepHeight  16;
+        QuakeAccelPlayer.DoubleJumpFactor   1;
+        QuakeAccelPlayer.MidairStepHeight   16;
+        QuakeAccelPlayer.MagneticLedgeScale 0;
         
         QuakeAccelPlayer.Q2SurfaceTension   true;
     }
@@ -149,6 +150,7 @@ class Q4AccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.WaterFriction   0.225223; // 3 @ 60fps
         
         QuakeAccelPlayer.MidairStepHeight     16;
+        QuakeAccelPlayer.MagneticLedgeScale   0;
         
         // these values are just guesses, since Q4 never had its source released
         //  and I don't know where any hard values for these are
@@ -179,6 +181,7 @@ class QCSliderAccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.CSlideFriction  0.688636; // 1 @ 77fps
         
         QuakeAccelPlayer.MidairStepHeight     16;
+        QuakeAccelPlayer.MagneticLedgeScale   0;
         
         // also spitballing these
         QuakeAccelPlayer.CrouchSlideTime      0;

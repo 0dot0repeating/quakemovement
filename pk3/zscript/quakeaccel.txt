@@ -19,7 +19,7 @@ class QuakeAccelPlayer: PlayerPawn
     const DEFAULT_MOVEMULT       = 0.03125;       // default movement speed mult, also used for friction scaling
     const MORE_FRICTION_VELOCITY = 15000.0/65536; // to unfuck the movement scaling on high friction floors
     const MAXSLOPEPITCH          = 45;            // Slopes at or above this pitch won't get jumped up
-    // interal vars
+    // internal vars
 
     protected bool    Q_Enabled;             // if off, use regular movement
     protected bool    Q_BlockJump;           // set when you jump, cleared when you let go of jump
@@ -75,6 +75,7 @@ class QuakeAccelPlayer: PlayerPawn
     uint   Q_CrouchSlideTime;       // minimum amount of tics you can slide for after hitting the ground
     double Q_CrouchSlideTimeScale;  // your fall time is multiplied by this and added to Q_CrouchSlideTime
     uint   Q_CrouchSlideTimeMax;    // does exactly what it says it does (it's in tics)
+    double Q_MagneticLedgeScale;    // scales friction if you're about to walk off a ledge
     double Q_WadingSpeedScale;      // scales your speed when waterlevel = 1
 
     bool   Q_EasyCrouchSlide;  // slide time doesn't tick down if you hold crouch in midair
@@ -82,7 +83,6 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_AutoSlide;        // you don't need to let go of crouch to repeatedly slide
     bool   Q_FlawedAirMove;    // replicate quake 3 behavior where holding jump midair slows horizontal movement
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
-    bool   Q_MagneticLedges;   // when enabled, your friction is doubled if you're about to walk off a ledge
     bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
     bool   Q_Q2SurfaceTension; // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
 
@@ -124,6 +124,7 @@ class QuakeAccelPlayer: PlayerPawn
     property CrouchSlideTime:       Q_CrouchSlideTime;
     property CrouchSlideTimeScale:  Q_CrouchSlideTimeScale;
     property CrouchSlideTimeMax:    Q_CrouchSlideTimeMax;
+    property MagneticLedgeScale:    Q_MagneticLedgeScale;
     property WadingSpeedScale:      Q_WadingSpeedScale;
 
     property Autohop:          Q_Autohop;
@@ -131,7 +132,6 @@ class QuakeAccelPlayer: PlayerPawn
     property VQ1Bunnyhop:      Q_VQ1Bunnyhop;
     property EasyCrouchSlide:  Q_EasyCrouchSlide;
     property FlawedAirMove:    Q_FlawedAirMove;
-    property MagneticLedges:   Q_MagneticLedges;
     property InstantZAdjust:   Q_InstantZAdjust;
     property Q2SurfaceTension: Q_Q2SurfaceTension;
 
@@ -146,10 +146,8 @@ class QuakeAccelPlayer: PlayerPawn
         // the rest of them are based off of quake 1 @ 77 fps
         //  (quakeworld servers typically run at 77fps)
         //
-        // if you're porting values from other games with quake movement, here's a
-        //  python function to help you port the friction values
-        //
-        // halftime = lambda friction, ticrate: math.log(0.5, 1-(friction/ticrate))/ticrate
+        // if you're porting values from other games with quake movement, see
+        //  QA_QFrictionToHalftime below
         //
         // some quake -> halftime friction values:
         //
@@ -201,6 +199,7 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.CrouchSlideTime        0;
         QuakeAccelPlayer.CrouchSlideTimeScale   0;
         QuakeAccelPlayer.CrouchSlideTimeMax     0;
+        QuakeAccelPlayer.MagneticLedgeScale     1.5;
         QuakeAccelPlayer.WadingSpeedScale       0.666; // for parity with regular doomguy
 
         QuakeAccelPlayer.Autohop           false;
@@ -208,7 +207,6 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.VQ1Bunnyhop       false;
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
-        QuakeAccelPlayer.MagneticLedges    false;
         QuakeAccelPlayer.InstantZAdjust    true;
     }
     
@@ -374,7 +372,7 @@ class QuakeAccelPlayer: PlayerPawn
             }
         }
         
-        return lowestFloorZ < thresholdFloorZ;
+        return lowestFloorZ < (thresholdFloorZ - MaxStepHeight);
     }
 
 
@@ -789,7 +787,7 @@ class QuakeAccelPlayer: PlayerPawn
                 vel.z = min(0, vel.z - GetGravity());
             }
             else
-            { 
+            {
                 vel.z -= GetGravity();
             }
             
@@ -801,7 +799,7 @@ class QuakeAccelPlayer: PlayerPawn
         if (reactiontime <= 0)
         {
             int flags = QMF_FLYING;
-            if (swimming & Q_InstantZAdjust) { flags |= QMF_IGNOREJUMP | QMF_IGNORECROUCh; }
+            if (swimming & Q_InstantZAdjust) { flags |= QMF_IGNOREJUMP | QMF_IGNORECROUCH; }
             
             [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, flags);
         }
@@ -845,7 +843,7 @@ class QuakeAccelPlayer: PlayerPawn
             
             if (direction)
             {
-                vel.z = direction * JumpZ / 3;
+                vel.z = direction * (Q_MaxWaterSpeed / (TICRATE * 2));
                 PlayRunning();
             }
         }
@@ -897,7 +895,7 @@ class QuakeAccelPlayer: PlayerPawn
 
         double friction, wishspeed, maxspeed;
         
-        double dropoffFactor = (Q_MagneticLedges && QA_CheckDropoff()) ? 0.5 : 1;
+        double dropoffFactor = QA_CheckDropoff() ? 1 + Q_MagneticLedgeScale : 1;
         bool   jumped = QA_CheckJump();
 
         if (player.onground && (!jumped || Q_VQ1Bunnyhop))
@@ -911,20 +909,20 @@ class QuakeAccelPlayer: PlayerPawn
             {
                 if (sliding)
                 {
-                    friction  = QA_Friction(Q_CSlideFriction * dropoffFactor, Q_StopCSlideSpeed);
+                    friction  = QA_Friction(Q_CSlideFriction / dropoffFactor, Q_StopCSlideSpeed);
                     wishspeed = Q_CSlideSpeed;
                     maxspeed  = Q_MaxCSlideSpeed;
                 }
                 else
                 {
-                    friction  = QA_Friction(Q_CrouchFriction * dropoffFactor, Q_StopCrouchSpeed);
+                    friction  = QA_Friction(Q_CrouchFriction / dropoffFactor, Q_StopCrouchSpeed);
                     wishspeed = Q_CrouchSpeed;
                     maxspeed  = Q_MaxCrouchSpeed;
                 }
             }
             else
             {
-                friction  = QA_Friction(Q_GroundFriction * dropoffFactor, Q_StopGroundSpeed);
+                friction  = QA_Friction(Q_GroundFriction / dropoffFactor, Q_StopGroundSpeed);
                 wishspeed = Q_GroundSpeed;
                 maxspeed  = Q_MaxGroundSpeed;
             }
