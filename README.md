@@ -159,9 +159,8 @@ or Slash in Quake Champions. The contexts are:
 - `FlawedAirMove`: **boolean**  
     This replicates a flaw in the Quake games where holding jump or crouch in midair lowers
     your air acceleration, due to the engine zeroing out the Z component of your desired
-    movement vector and reducing its length in the process. You usually only notice this
-    when using the autohop feature in Quake Live and Quake Champions, since otherwise, the
-    engine acts like you let go of the jump button the moment you jump.
+    movement vector and reducing its length in the process. If you ever wondered why
+    holding jump made your strafejumping suck... this is why.
 
 
 - `MagneticLedges`: **boolean**  

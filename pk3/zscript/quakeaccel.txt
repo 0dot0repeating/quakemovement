@@ -23,7 +23,7 @@ class QuakeAccelPlayer: PlayerPawn
 
     protected bool    Q_Enabled;             // if off, use regular movement
     protected bool    Q_BlockJump;           // set when you jump, cleared when you let go of jump
-    protected bool    Q_BlockSlide;          // set when you jump, cleared when you let go of crouch
+    protected bool    Q_BlockSlide;          // set when flying, leaving ground with crouch pressed, and on ground when not sliding; cleared when in midair and not holding crouch (or Q_AutoSlide on)
     protected uint    Q_CrouchSlideHeldTime; // how many tics you've held crouch
     protected int     Q_GroundTime;          // positive = tics spent on ground, negative = tics spent off ground
     protected int     Q_FallTime;            // time spent off ground with negative Z velocity
@@ -190,7 +190,7 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.StopCrouchSpeed 137.5;
         QuakeAccelPlayer.StopAirSpeed    0;
         QuakeAccelPlayer.StopFlySpeed    137.5;
-        QuakeAccelPlayer.StopWaterSpeed  137.5;
+        QuakeAccelPlayer.StopWaterSpeed  0;
         QuakeAccelPlayer.StopCSlideSpeed 137.5;
 
         QuakeAccelPlayer.QGravity               0.65;
@@ -478,7 +478,6 @@ class QuakeAccelPlayer: PlayerPawn
 
         QA_NormalizeMoveCmd(cmd);
         if (!(cmd.buttons & BT_JUMP))   { Q_BlockJump  = false; }
-        if (!(cmd.buttons & BT_CROUCH)) { Q_BlockSlide = false; }
 
         QA_TurnPlayer();
 
@@ -797,7 +796,7 @@ class QuakeAccelPlayer: PlayerPawn
             return;
         }
         
-        Q_CrouchSlideHeldTime = Q_CrouchSlideTime;
+        Q_BlockSlide = true;
         
         if (reactiontime <= 0)
         {
@@ -861,21 +860,42 @@ class QuakeAccelPlayer: PlayerPawn
         UserCmd cmd = player.cmd;
         vector3 movedir = (0,0,0);
         double  movelength = 0;
-
-        double friction, wishspeed, maxspeed;
-
-        if (QA_IsCrouching(cmd) && (player.onGround || !Q_EasyCrouchSlide))
+        
+        bool crouching = QA_IsCrouching(cmd);
+        bool sliding   = false;
+        
+        int slideTimeLimit = Q_CrouchSlideTime + int(Q_FallTime * Q_CrouchSlideTimeScale);
+        if (Q_CrouchSlideTimeMax > 0) { slideTimeLimit = min(slideTimeLimit, Q_CrouchSlideTimeMax); }
+        
+        if (player.onground)
         {
-            Q_CrouchSlideHeldTime++;
-        }
-        else if (player.onGround)
-        {
-            Q_CrouchSlideHeldTime = Q_CrouchSlideTime;
+            if (!crouching || Q_CrouchSlideHeldTime > slideTimeLimit)
+            {
+                Q_BlockSlide = true;
+            }
+            else
+            {
+                sliding = !Q_BlockSlide;
+                Q_CrouchSlideHeldTime++;
+            }
         }
         else
         {
-            Q_CrouchSlideHeldTime = 0;
+            if (!crouching) { Q_BlockSlide = false; }
+            if (Q_GroundTime == -1 && crouching && !Q_AutoSlide) { Q_BlockSlide = true; } 
+            
+            if (!crouching || Q_EasyCrouchSlide)
+            {
+                Q_CrouchSlideHeldTime = 0;
+            }
+            else
+            {
+                Q_CrouchSlideHeldTime++;
+            }
         }
+            
+
+        double friction, wishspeed, maxspeed;
         
         double dropoffFactor = (Q_MagneticLedges && QA_CheckDropoff()) ? 0.5 : 1;
         bool   jumped = QA_CheckJump();
@@ -887,12 +907,9 @@ class QuakeAccelPlayer: PlayerPawn
                 [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch);
             }
             
-            int slideTimeLimit = Q_CrouchSlideTime + int(Q_FallTime * Q_CrouchSlideTimeScale);
-            if (Q_CrouchSlideTimeMax > 0) { slideTimeLimit = min(slideTimeLimit, Q_CrouchSlideTimeMax); }
-
-            if (QA_IsCrouching(cmd))
+            if (crouching)
             {
-                if (!Q_BlockSlide && Q_CrouchSlideHeldTime <= slideTimeLimit)
+                if (sliding)
                 {
                     friction  = QA_Friction(Q_CSlideFriction * dropoffFactor, Q_StopCSlideSpeed);
                     wishspeed = Q_CSlideSpeed;
