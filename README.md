@@ -6,7 +6,7 @@ This mini-project is a modding resource that allows you to quickly and easily ad
 Quake physics to your mod. This is more of a resource than a playable mod, although
 you can play it to see what it's like.
 
-**Latest package:** http://jinotra.in/downloads/mods/doom/quakemovement/quakemovement-v1.pk3
+**Latest package:** http://jinotra.in/downloads/mods/doom/quakemovement/quakemovement-v1.1.pk3
 
 **Packaged downloads:** http://jinotra.in/downloads/mods/doom/quakemovement
 
@@ -184,9 +184,11 @@ or Slash in Quake Champions. The contexts are:
     This simulates that.
 
 
-By default, QuakeAccelPlayer is configured to act similarly to Quakeworld's physics.
-See `pk3/zscript/testclasses.txt` for examples of how to configure it to act similarly
-to the other Quake games.
+By default, QuakeAccelPlayer is configured so that all of its movement styles act similarly
+to the game they first appeared in - so air movement acts like Quake 1, crouch movement acts
+like Quake 2, fly movement acts like Quake 3, slide movement acts like Quake 4, among other
+examples. See `pk3/zscript/testclasses.txt` for examples of how to make the player act like
+the other games in their entirety.
 
 
 ## Quake friction values to half-time values
