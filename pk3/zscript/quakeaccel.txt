@@ -1,4 +1,4 @@
-// Copyright © 2018 ijon <segfaultsamurai@gmail.com>
+// Copyright © 2019 ijon <segfaultsamurai@gmail.com>
 // This work is free. You can redistribute it and/or modify it under the
 // terms of the Do What The Fuck You Want To Public License, Version 2,
 // as published by Sam Hocevar. See the LICENSE.txt file for more details.
@@ -258,8 +258,23 @@ class QuakeAccelPlayer: PlayerPawn
     {
         return CVar.FindCVar("turbo").GetFloat() / 100;
     }
-
-
+    
+    // j = jumpz, g = gravity, h = jump height
+    // j(j+g) / 2g = h
+    // j(j+g)      = 2gh
+    // j**2 + jg   = 2gh
+    //
+    // aj**2 + bj - 2gh = 0
+    // a = 1, b = g, c = 2gh
+    //
+    // one quadratic formula later
+    // j = (sqrt(g**2 + 8gh) - g) / 2
+    
+    static clearscope double QA_JumpZFromHeight(double h, double g = 1)
+    {
+        return (sqrt(g**2 + (8*g*h)) - g) / 2;
+    }
+    
     static clearscope vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
     {
         // x' =  cos(angle) cos(pitch)x + -sin(angle)y + cos(angle) sin(pitch)z
@@ -351,7 +366,7 @@ class QuakeAccelPlayer: PlayerPawn
     bool QA_CheckDropoff()
     {
         // if we're standing on a thing, don't even bother, it'll just act weird
-        if (z > floorz) { return false; }
+        if (pos.z > floorz) { return false; }
         
         double thresholdFloorZ = floorz;
         double lowestFloorZ    = floorz;
@@ -383,7 +398,7 @@ class QuakeAccelPlayer: PlayerPawn
 
         Q_Enabled         = on;
         Gravity           = on ? Q_Gravity : Default.Gravity;
-        JumpZ             = on ? sqrt(2 * Q_JumpHeight * Q_Gravity) : Default.JumpZ;
+        JumpZ             = on ? QA_JumpZFromHeight(Q_JumpHeight, Q_Gravity) : Default.JumpZ;
         bNoFriction       = on ? true : Default.bNoFriction;
         bNoFrictionBounce = on ? true : Default.bNoFrictionBounce;
 
