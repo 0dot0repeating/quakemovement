@@ -85,7 +85,11 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
     bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
     bool   Q_Q2SurfaceTension; // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
-
+    
+    double Q_RollScale;        // side velocity * rollScale = desired roll angle
+    double Q_RollSpeed;        // how many degrees per tic can roll change
+    double Q_RollMax;          // clamps desired roll
+    
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
     property GroundSpeed:     Q_GroundSpeed;
@@ -134,6 +138,10 @@ class QuakeAccelPlayer: PlayerPawn
     property FlawedAirMove:    Q_FlawedAirMove;
     property InstantZAdjust:   Q_InstantZAdjust;
     property Q2SurfaceTension: Q_Q2SurfaceTension;
+    
+    property RollScale:        Q_RollScale;
+    property RollSpeed:        Q_RollSpeed;
+    property RollMax:          Q_RollMax;
 
     Default
     {
@@ -208,6 +216,10 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
         QuakeAccelPlayer.InstantZAdjust    true;
+        
+        QuakeAccelPlayer.RollScale         0.125;
+        QuakeAccelPlayer.RollSpeed         22.5;
+        QuakeAccelPlayer.RollMax           5;
     }
     
     
@@ -233,22 +245,22 @@ class QuakeAccelPlayer: PlayerPawn
     // halftime = log[1 - friction](0.5) / ticrate
     
     
-    static clearscope double QA_HalftimeToFriction(double halftime, int fps)
+    static clearscope double QA_HalftimeToFriction(double halftime, int fps = 35)
     {
         return -(0.5 ** (1 / (halftime * fps))) + 1;
     }
     
-    static clearscope double QA_FrictionToHalftime(double friction, int fps)
+    static clearscope double QA_FrictionToHalftime(double friction, int fps = 35)
     {
         return log(0.5) / (log(1 - friction) * fps);
     }
     
-    static clearscope double QA_HalftimeToQFriction(double halftime, int fps)
+    static clearscope double QA_HalftimeToQFriction(double halftime, int fps = 35)
     {
         return QA_HalftimeToFriction(halftime, fps) * fps;
     }
     
-    static clearscope double QA_QFrictionToHalftime(double qfriction, int fps)
+    static clearscope double QA_QFrictionToHalftime(double qfriction, int fps = 35)
     {
         return QA_FrictionToHalftime(qfriction / fps, fps);
     }
@@ -975,6 +987,8 @@ class QuakeAccelPlayer: PlayerPawn
 
     void QA_SetRoll(Usercmd cmd)
     {
+        if (Q_RollMax == 0) { return; }
+        
         vector2 velxy   = (vel.x, vel.y);
 
         vector2 forward      = (cos(Angle), sin(Angle));
@@ -985,8 +999,8 @@ class QuakeAccelPlayer: PlayerPawn
 
         if (deltaangle(atan2(forward.y, forward.x), atan2(side.y, side.x)) > 0) { sideSpeed *= -1; }
 
-        double desiredRoll = clamp(sideSpeed / 8, -5, 5);
-        double rollDiff = clamp(desiredRoll - Roll, -22.5 / TICRATE, 22.5 / TICRATE);
+        double desiredRoll = clamp(sideSpeed * Q_RollScale, -Q_RollMax, Q_RollMax);
+        double rollDiff = clamp(desiredRoll - Roll, -Q_RollSpeed / TICRATE, Q_RollSpeed / TICRATE);
 
         A_SetRoll(Roll + rollDiff);
     }

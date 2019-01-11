@@ -194,3 +194,25 @@ class QCSliderAccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.InstantZAdjust    false;  // not like there's anywhere to swim in quack chumps
     }
 }
+
+
+class TestAccelPlayer: Q1AccelPlayer
+{
+    Default
+    {
+        Player.DisplayName "Hybrid?";
+        
+        QuakeAccelPlayer.GroundSpeed    3300;
+        QuakeAccelPlayer.MaxGroundSpeed 528.6;
+        
+        QuakeAccelPlayer.GroundFriction  0.110963; // 6 @ 77fps
+        QuakeAccelPlayer.WaterFriction   0.226518; // 3 @ 77fps
+        
+        QuakeAccelPlayer.DoubleJumpFactor   1;
+        QuakeAccelPlayer.MidairStepHeight   24;
+        QuakeAccelPlayer.MagneticLedgeScale 1.5;
+        
+        QuakeAccelPlayer.RollScale 0.05;
+        QuakeAccelPlayer.RollMax   4;
+    }
+}
