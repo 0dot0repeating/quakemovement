@@ -208,6 +208,8 @@ class TestAccelPlayer: Q1AccelPlayer
         QuakeAccelPlayer.GroundFriction  0.110963; // 6 @ 77fps
         QuakeAccelPlayer.WaterFriction   0.226518; // 3 @ 77fps
         
+        QuakeAccelPlayer.QGravity           0.6;
+        QuakeAccelPlayer.QJumpHeight        36;
         QuakeAccelPlayer.DoubleJumpFactor   1;
         QuakeAccelPlayer.MidairStepHeight   24;
         QuakeAccelPlayer.MagneticLedgeScale 1.5;

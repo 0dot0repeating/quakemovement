@@ -285,7 +285,21 @@ class QuakeAccelPlayer: PlayerPawn
     
     static clearscope double QA_JumpZFromHeight(double h, double g = 1)
     {
-        return (sqrt(g**2 + (8*g*h)) - g) / 2;
+        // this is close, but not exact because it works off continuous time,
+        //  rather than the discrete tics doom actually works in
+        double baseEstimate = (sqrt(g**2 + (8*g*h)) - g) / 2;
+        
+        // round estimate to nearest multiple of g, figure out how high that gets us
+        double estimate  = g * int(baseEstimate / g);
+        double estHeight = estimate * (estimate + g) / (2 * g);
+        
+        // get the difference from what we want, divide it by the amount of tics
+        //  you spend rising, add it onto the estimate
+        double estDiff = (h - estHeight);
+        double estTime = ceil(baseEstimate / g);
+        estimate += estDiff / estTime;
+        
+        return estimate;
     }
     
     static clearscope vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
