@@ -275,22 +275,30 @@ class QuakeAccelPlayer: PlayerPawn
     // j = jumpz, g = gravity, h = jump height
     // j(j+g) / 2g = h
     // j(j+g)      = 2gh
-    // j**2 + jg   = 2gh
+    // j^2 + jg   = 2gh
     //
-    // aj**2 + bj - 2gh = 0
+    // aj^2 + bj - 2gh = 0
     // a = 1, b = g, c = 2gh
     //
     // one quadratic formula later
-    // j = (sqrt(g**2 + 8gh) - g) / 2
+    // j = (sqrt(g^2 + 8gh) - g) / 2
+    //
+    // problem is, the base formula seems to grab the height of the jump half
+    //  a tic before the peak, which means it's usually wrong, but always
+    //  close enough to get the correct JumpZ from it. the formula works when
+    //  vz = 0 at the peak of the ingame jump, which is why I can fix the estimate.
+    //
+    // it probably has to do with doom's physics being based off discrete time
+    //  units, rather than being continuous. if I knew how to get it right the
+    //  first time, I would.
     
-    static clearscope double QA_JumpZFromHeight(double h, double g = 1)
+    static clearscope double QA_HeightToJumpZ(double h, double g = 1)
     {
-        // this is close, but not exact because it works off continuous time,
-        //  rather than the discrete tics doom actually works in
         double baseEstimate = (sqrt(g**2 + (8*g*h)) - g) / 2;
         
-        // round estimate to nearest multiple of g, figure out how high that gets us
-        double estimate  = g * int(baseEstimate / g);
+        // round estimate to previous multiple of g (so vz = 0 at the peak tic),
+        //  and figure out how high that gets us
+        double estimate  = baseEstimate - (baseEstimate % g);
         double estHeight = estimate * (estimate + g) / (2 * g);
         
         // get the difference from what we want, divide it by the amount of tics
@@ -425,7 +433,7 @@ class QuakeAccelPlayer: PlayerPawn
 
         Q_Enabled         = on;
         Gravity           = on ? Q_Gravity : Default.Gravity;
-        JumpZ             = on ? QA_JumpZFromHeight(Q_JumpHeight, Q_Gravity) : Default.JumpZ;
+        JumpZ             = on ? QA_HeightToJumpZ(Q_JumpHeight, Q_Gravity) : Default.JumpZ;
         bNoFriction       = on ? true : Default.bNoFriction;
         bNoFrictionBounce = on ? true : Default.bNoFrictionBounce;
 
