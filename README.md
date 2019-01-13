@@ -6,7 +6,7 @@ This mini-project is a modding resource that allows you to quickly and easily ad
 Quake physics to your mod. This is more of a resource than a playable mod, although
 you can play it to see what it's like.
 
-**Latest package:** http://jinotra.in/downloads/mods/doom/quakemovement/quakemovement-v1.1.pk3
+**Latest package:** http://jinotra.in/downloads/mods/doom/quakemovement/quakemovement-v1.2.pk3
 
 **Packaged downloads:** http://jinotra.in/downloads/mods/doom/quakemovement
 

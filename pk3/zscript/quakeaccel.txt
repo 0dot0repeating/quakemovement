@@ -899,7 +899,7 @@ class QuakeAccelPlayer: PlayerPawn
         }
         
         // TODO: remove this when/if +DONTSINK gets added
-        if (!(cmd.forwardmove || cmd.sidemove)) { cmd.forwardmove = 1; }
+        if (swimming && !(cmd.forwardmove || cmd.sidemove)) { cmd.forwardmove = 1; }
     }
 
 
