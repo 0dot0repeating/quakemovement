@@ -194,7 +194,7 @@ the other games in their entirety.
 ## Useful info I guess
 
 
-### Doom values
+### Doom friction/speed
 
 Doom's default friction value is 0.90625, which at its fixed ticrate of 35 translates to
 a halftime value of approxiamtely 0.2012.
@@ -209,18 +209,25 @@ Forward walk    | 0.78125         |  957.03125    |  7.5520           | 264.323
 Sideways run    | 1.25            | 1531.25       | 12.0833           | 422.917
 Sideways walk   | 0.75            |  918.75       |  7.25             | 253.75
 Sideways mouse¹ | 1.5625          | 1914.0625     | 15.1041           | 528.646
-SR40            | 2.00098         | 2706.8931     | 19.3427           | 676.997
-SR50            | 2.20971         | 2451.156      | 21.3605           | 747.618
+SR40            | 2.00098         | 2451.156      | 19.3427           | 676.997
+SR50            | 2.20971         | 2706.8931     | 21.3605           | 747.618
 
 ¹ Max strafe speed when using the mouse.
 
 
-### Quake values
+### Quake max speed
 
 Calculating max speed with Quake physics is different than in Doom, because Quake
 applies friction before acceleration rather than Doom's friction after acceleration.
 Therefore, the equation for max speed given friction and acceleration (same units as
 above) is `v = a/(1-f)`.
+
+If you have a max speed you want to reach with a given acceleration, use `f = (v-a)/v`.
+
+If you have a max speed you want to reach with a given friction, use `a = v(1-f)`.
+
+
+### Quake friction
 
 In general, you can convert Quake friction values to half-time values with this Python function:
 

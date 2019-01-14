@@ -180,8 +180,8 @@ class QuakeAccelPlayer: PlayerPawn
 
         QuakeAccelPlayer.MaxGroundSpeed  440;   // base speed
         QuakeAccelPlayer.MaxCrouchSpeed  137.5; // 5/16 of base speed (q2)
-        QuakeAccelPlayer.MaxAirSpeed     41.25; // same as base speed (q1)
-        QuakeAccelPlayer.MaxFlySpeed     440;   // 4/5  of base speed (q3)
+        QuakeAccelPlayer.MaxAirSpeed     41.25; // 3/32 of base speed (q1)
+        QuakeAccelPlayer.MaxFlySpeed     440;   // same as base speed (q3)
         QuakeAccelPlayer.MaxWaterSpeed   220;   // 1/2  of base speed (q1, but halved)
         QuakeAccelPlayer.MaxCSlideSpeed  220;   // 1/2  of base speed (q4)
 
