@@ -191,7 +191,31 @@ examples. See `pk3/zscript/testclasses.txt` for examples of how to make the play
 the other games in their entirety.
 
 
-## Quake friction values to half-time values
+## Useful info I guess
+
+
+### Doom values
+
+Doom's default friction value is 0.90625, which at its fixed ticrate of 35 translates to
+a halftime value of approxiamtely 0.2012.
+
+Max speed (in u/tic) can be solved easily given acceleration (in u/tic^2) and friction
+(in percentage of velocity kept per tic) with the equation `v = af/(1-f)`.
+
+ Movement mode  | Accel (u/tic^2) | Accel (u/s^2) | Max speed (u/s)
+:--------------:|:---------------:|:-------------:|:---------------:
+Forward run     | 1.5625          | 1914.0625     | 528.646
+Forward walk    | 0.78125         | 957.03125     | 264.323
+Sideways run    | 1.25            | 1531.25       | 422.917
+Sideways walk   | 0.75            | 918.75        | 253.75
+Sideways mouse¹ | 1.5625          | 1914.0625     | 528.646
+SR40            | 2.00098         | 2706.8931     | 676.997
+SR50            | 2.20971         | 2451.156      | 747.618
+
+¹ Max strafe speed when using the mouse.
+
+
+### Quake friction values to half-time values
 
 In general, you can convert Quake friction values to half-time values with this Python function:
 
