@@ -515,17 +515,25 @@ class QuakeAccelPlayer: PlayerPawn
     }
 
 
-    bool QA_CheckDropoff()
+    bool QA_CheckDropoff(vector2 movedir = (0,0))
     {
         // if we're standing on a thing, don't even bother, it'll just act weird
         if (pos.z > floorz) { return false; }
+        
+        // if movedir is nonzero, assume the player wants to drop off ledges in
+        //  the direction he's moving
+        if (movedir.length() > 0)
+        {
+            movedir = movedir.unit();   
+            if (vel.xy dot movedir > 0) { return false; }
+        }
 
         double thresholdFloorZ = floorz;
         double lowestFloorZ    = floorz;
 
         if (vel.xy.length() > 0)
         {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < (radius / 8) + 4; i++)
             {
                 FCheckPosition checkResult;
                 vector2 newpos = pos.xy + (vel.xy.unit() * 8 * i);
@@ -1068,8 +1076,6 @@ class QuakeAccelPlayer: PlayerPawn
 
 
         double friction, wishspeed, maxspeed;
-
-        double dropoffFactor = QA_CheckDropoff() ? 1 + Q_MagneticLedgeScale : 1;
         bool   jumped = QA_CheckJump();
 
         if (player.onground && (!jumped || Q_VQ1Bunnyhop))
@@ -1084,6 +1090,8 @@ class QuakeAccelPlayer: PlayerPawn
                 [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, 0, fwdscale, backscale, sidescale, upscale);
             }
 
+            double dropoffFactor = QA_CheckDropoff(movedir.xy) ? 1 + Q_MagneticLedgeScale : 1;
+            
             if (crouching)
             {
                 if (sliding)
