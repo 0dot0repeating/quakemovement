@@ -86,6 +86,23 @@ or Slash in Quake Champions. The contexts are:
     The friction functions will act like your speed is at least this value when slowing you down.
     For example, a value of 200 means that you'll be treated as moving at 200 u/s if you're
     moving slower than that, and you will be slowed down accordingly. These values are in u/s.
+    
+
+- `ForwardScale`, `BackwardScale`, `SideScale`, `UpScale`: **double**  
+    Scales how fast you can move in a given direction. Most of them are self-explanatory,
+    but UpScale only applies to the thrust you gain from +moveup/+movedown/+jump/+crouch,
+    not from flying up/down with +forward/+back. Acceleration and max speed are scaled
+    by these properties.
+
+
+- `Ground{Forward,Backward,Side,Up}Scale`, `Air{Forward,Backward,Side,Up}Scale`, `Water{Forward,Backward,Side,Up}Scale`, `Fly{Forward,Backward,Side,Up}Scale`, `CSlide{Forward,Backward,Side,Up}Scale`: **double**  
+    Scales the above DirectionScale properties in the given contexts. They multiply
+    together, so a ForwardScale of 1.2 and a GroundForwardScale of 1.25 gets you a
+    net forward scale of 1.5 on the ground.
+
+    
+- `WadingSpeedScale`: **double**  
+    Scales your speed when wading through water (waterlevel = 1).
 
 
 - `QGravity`: **double**  
@@ -107,7 +124,8 @@ or Slash in Quake Champions. The contexts are:
     Quake and Quake 2 have a physics quirk where jumping adds to your Z velocity if it's
     positive, rather than simply setting it. This setting scales how much of your starting
     Z velocity is added to your jump velocity. For example, 0.5 means 50% of your Z velocity
-    gets added to your jump velocity.
+    gets added to your jump velocity. If you want half the distance gained, use 0.7071
+    (roughly √0.5).
 
 
 - `RampJumpFactor`: **double**  
@@ -140,10 +158,6 @@ or Slash in Quake Champions. The contexts are:
     0, this recreates that behavior (higher values means higher ledge friction).
     
     Don't set this to -1; that'll cause a divide by zero error.
-
-    
-- `WadingSpeedScale`: **double**  
-    Scales your speed when wading through water (waterlevel = 1).
 
 
 - `Autohop`: **boolean**  

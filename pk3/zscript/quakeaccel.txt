@@ -13,7 +13,7 @@ class QuakeAccelPlayer: PlayerPawn
         QMF_IGNOREJUMP   = 0x4,
         QMF_IGNORECROUCH = 0x8,
     };
-    
+
     const MAXMOVE                = 0x3200;        // purely for scaling the movement commands
     const DEFAULT_FRICTION       = 0.90625;       // default friction, used for scaling our friction
     const DEFAULT_MOVEMULT       = 0.03125;       // default movement speed mult, also used for friction scaling
@@ -56,7 +56,7 @@ class QuakeAccelPlayer: PlayerPawn
     double Q_GroundFriction;   // how many seconds it takes for your velocity to
     double Q_CrouchFriction;   // be reduced to half its current value - engine
     double Q_AirFriction;      // friction is zeroed out to allow for ours
-    double Q_FlyFriction;      // 
+    double Q_FlyFriction;      //
     double Q_WaterFriction;    // friction value below 0 means "no friction"
     double Q_CSlideFriction;
 
@@ -67,6 +67,40 @@ class QuakeAccelPlayer: PlayerPawn
     double Q_StopWaterSpeed;
     double Q_StopCSlideSpeed;
 
+    
+    double Q_ForwardScale;     // speed scalar that applies to all movement modes
+    double Q_BackwardScale;    // all of these scale your accel and max speed
+    double Q_SideScale;
+    double Q_UpScale;
+    
+    double Q_GroundForwardScale;    // all of these stack multiplicatively with
+    double Q_GroundBackwardScale;   //  the general speed scalars
+    double Q_GroundSideScale;
+    double Q_GroundUpScale;
+
+    double Q_AirForwardScale;       // fuck copypasting these btw
+    double Q_AirBackwardScale;
+    double Q_AirSideScale;
+    double Q_AirUpScale;
+
+    double Q_FlyForwardScale;       // aaaaaaaaaaaaaaa
+    double Q_FlyBackwardScale;
+    double Q_FlySideScale;
+    double Q_FlyUpScale;
+
+    double Q_WaterForwardScale;     // AAAAAAAAAAAAAAAAAAAAAA
+    double Q_WaterBackwardScale;
+    double Q_WaterSideScale;
+    double Q_WaterUpScale;
+
+    double Q_CSlideForwardScale;    // let me die
+    double Q_CSlideBackwardScale;
+    double Q_CSlideSideScale;
+    double Q_CSlideUpScale;
+
+    double Q_WadingScale;           // applies when waterlevel = 1
+
+    
     double Q_Gravity;               // gravity value when using quake accel
     double Q_JumpHeight;            // jump height to use when using quake accel
     double Q_MidairStepHeight;      // your MaxStepHeight when in midair
@@ -76,7 +110,6 @@ class QuakeAccelPlayer: PlayerPawn
     double Q_CrouchSlideTimeScale;  // your fall time is multiplied by this and added to Q_CrouchSlideTime
     uint   Q_CrouchSlideTimeMax;    // does exactly what it says it does (it's in tics)
     double Q_MagneticLedgeScale;    // scales friction if you're about to walk off a ledge
-    double Q_WadingSpeedScale;      // scales your speed when waterlevel = 1
 
     bool   Q_EasyCrouchSlide;  // slide time doesn't tick down if you hold crouch in midair
     bool   Q_Autohop;          // you don't need to let go of jump to repeatedly jump
@@ -85,13 +118,27 @@ class QuakeAccelPlayer: PlayerPawn
     bool   Q_VQ1Bunnyhop;      // ground friction applies for a tic, even if you hop immediately
     bool   Q_InstantZAdjust;   // when swimming, jump and crouch instantly make you rise/fall at set speeds
     bool   Q_Q2SurfaceTension; // when swimming on the surface (waterlevel 1), Z velocity maxes out at 0
-    
+
     double Q_RollScale;        // side velocity * rollScale = desired roll angle
     double Q_RollSpeed;        // how many degrees per tic can roll change
     double Q_RollMax;          // clamps desired roll
-    
+
+
+
     property UseQuakeAccel:   Q_UseQuakeAccel;
 
+    // convenience
+    property Speeds:          Q_GroundSpeed,     Q_CrouchSpeed,     Q_AirSpeed,     Q_WaterSpeed,     Q_FlySpeed,     Q_CSlideSpeed;
+    property MaxSpeeds:       Q_MaxGroundSpeed,  Q_MaxCrouchSpeed,  Q_MaxAirSpeed,  Q_MaxWaterSpeed,  Q_MaxFlySpeed,  Q_MaxCSlideSpeed;
+    property Frictions:       Q_GroundFriction,  Q_CrouchFriction,  Q_AirFriction,  Q_WaterFriction,  Q_FlyFriction,  Q_CSlideFriction;
+    property StopSpeeds:      Q_StopGroundSpeed, Q_StopCrouchSpeed, Q_StopAirSpeed, Q_StopWaterSpeed, Q_StopFlySpeed, Q_StopCSlideSpeed;
+    
+    property ForwardScales:   Q_ForwardScale,  Q_GroundForwardScale,  Q_AirForwardScale,  Q_WaterForwardScale,  Q_FlyForwardScale,  Q_CSlideForwardScale;
+    property BackwardScales:  Q_BackwardScale, Q_GroundBackwardScale, Q_AirBackwardScale, Q_WaterBackwardScale, Q_FlyBackwardScale, Q_CSlideBackwardScale;
+    property SideScales:      Q_SideScale,     Q_GroundSideScale,     Q_AirSideScale,     Q_WaterSideScale,     Q_FlySideScale,     Q_CSlideSideScale;
+    property UpScales:        Q_UpScale,       Q_GroundUpScale,       Q_AirUpScale,       Q_WaterUpScale,       Q_FlyUpScale,       Q_CSlideUpScale;
+
+    
     property GroundSpeed:     Q_GroundSpeed;
     property CrouchSpeed:     Q_CrouchSpeed;
     property AirSpeed:        Q_AirSpeed;
@@ -120,6 +167,40 @@ class QuakeAccelPlayer: PlayerPawn
     property StopWaterSpeed:  Q_StopWaterSpeed;
     property StopCSlideSpeed: Q_StopCSlideSpeed;
 
+    
+    property ForwardScale:          Q_ForwardScale;         // hello is it time to suffer
+    property BackwardScale:         Q_BackwardScale;
+    property SideScale:             Q_SideScale;
+    property UpScale:               Q_UpScale;
+    
+    property GroundForwardScale:    Q_GroundForwardScale;   // yes
+    property GroundBackwardScale:   Q_GroundBackwardScale;
+    property GroundSideScale:       Q_GroundSideScale;
+    property GroundUpScale:         Q_GroundUpScale;
+
+    property AirForwardScale:       Q_AirForwardScale;
+    property AirBackwardScale:      Q_AirBackwardScale;
+    property AirSideScale:          Q_AirSideScale;
+    property AirUpScale:            Q_AirUpScale;
+
+    property FlyForwardScale:       Q_FlyForwardScale;
+    property FlyBackwardScale:      Q_FlyBackwardScale;
+    property FlySideScale:          Q_FlySideScale;
+    property FlyUpScale:            Q_FlyUpScale;
+
+    property WaterForwardScale:     Q_WaterForwardScale;
+    property WaterBackwardScale:    Q_WaterBackwardScale;
+    property WaterSideScale:        Q_WaterSideScale;
+    property WaterUpScale:          Q_WaterUpScale;
+
+    property CSlideForwardScale:    Q_CSlideForwardScale;
+    property CSlideBackwardScale:   Q_CSlideBackwardScale;
+    property CSlideSideScale:       Q_CSlideSideScale;
+    property CSlideUpScale:         Q_CSlideUpScale;
+    
+    property WadingScale:     Q_WadingScale;
+
+    
     property QGravity:              Q_Gravity;
     property QJumpHeight:           Q_JumpHeight;
     property MidairStepHeight:      Q_MidairStepHeight;
@@ -129,7 +210,6 @@ class QuakeAccelPlayer: PlayerPawn
     property CrouchSlideTimeScale:  Q_CrouchSlideTimeScale;
     property CrouchSlideTimeMax:    Q_CrouchSlideTimeMax;
     property MagneticLedgeScale:    Q_MagneticLedgeScale;
-    property WadingSpeedScale:      Q_WadingSpeedScale;
 
     property Autohop:          Q_Autohop;
     property AutoSlide:        Q_AutoSlide;
@@ -138,7 +218,7 @@ class QuakeAccelPlayer: PlayerPawn
     property FlawedAirMove:    Q_FlawedAirMove;
     property InstantZAdjust:   Q_InstantZAdjust;
     property Q2SurfaceTension: Q_Q2SurfaceTension;
-    
+
     property RollScale:        Q_RollScale;
     property RollSpeed:        Q_RollSpeed;
     property RollMax:          Q_RollMax;
@@ -166,7 +246,7 @@ class QuakeAccelPlayer: PlayerPawn
         //  4: 0.167444  0.168427  0.168746  0.169177  0.170499
         //  5: 0.132769  0.133758  0.134078  0.134511  0.135838
         //  6: 0.109647  0.110641  0.110963  0.111397  0.112729
-        
+
         // values come from the first quake game you could use the movement in,
         //  with the exception of water speeds, which are half of quake 1's speeds
         //  to better match regular zdoom swim speeds
@@ -199,6 +279,12 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.StopWaterSpeed  0;
         QuakeAccelPlayer.StopCSlideSpeed 137.5;
 
+        QuakeAccelPlayer.ForwardScales   1, 1, 1, 1, 1, 1;
+        QuakeAccelPlayer.BackwardScales  1, 1, 1, 1, 1, 1;
+        QuakeAccelPlayer.SideScales      1, 1, 1, 1, 1, 1;
+        QuakeAccelPlayer.UpScales        1, 1, 1, 1, 1, 1;
+        QuakeAccelPlayer.WadingScale     0.666; // for parity with regular doomguy
+
         QuakeAccelPlayer.QGravity               0.65;
         QuakeAccelPlayer.QJumpHeight            40;
         QuakeAccelPlayer.MidairStepHeight       0;
@@ -208,7 +294,6 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.CrouchSlideTimeScale   0;
         QuakeAccelPlayer.CrouchSlideTimeMax     0;
         QuakeAccelPlayer.MagneticLedgeScale     1.5;
-        QuakeAccelPlayer.WadingSpeedScale       0.666; // for parity with regular doomguy
 
         QuakeAccelPlayer.Autohop           false;
         QuakeAccelPlayer.AutoSlide         false;
@@ -216,13 +301,13 @@ class QuakeAccelPlayer: PlayerPawn
         QuakeAccelPlayer.EasyCrouchSlide   false;
         QuakeAccelPlayer.FlawedAirMove     false;
         QuakeAccelPlayer.InstantZAdjust    true;
-        
+
         QuakeAccelPlayer.RollScale         0.125;
         QuakeAccelPlayer.RollSpeed         22.5;
         QuakeAccelPlayer.RollMax           5;
     }
-    
-    
+
+
     // this is here mostly to remind myself how I got these functions
     //
     // friction: endSpeed = startSpeed * (1 - (qfriction * frametime))  (how quake does it)
@@ -232,7 +317,7 @@ class QuakeAccelPlayer: PlayerPawn
     //
     // quake's friction values get plugged directly into that, but we use halftimes,
     //  so some math is needed
-    // 
+    //
     // (1 - friction) ** (halftime * ticrate) = 0.5
     //  1 - friction =   0.5 ** (1 / (halftime * ticrate))
     //    - friction =   0.5 ** (1 / (halftime * ticrate))  - 1
@@ -243,23 +328,23 @@ class QuakeAccelPlayer: PlayerPawn
     // (1 - friction) ** (halftime * ticrate) = 0.5     // a ** b = c
     // halftime * ticrate = log[1 - friction](0.5)      // log[a](c) = b
     // halftime = log[1 - friction](0.5) / ticrate
-    
-    
+
+
     static clearscope double QA_HalftimeToFriction(double halftime, int fps = 35)
     {
         return -(0.5 ** (1 / (halftime * fps))) + 1;
     }
-    
+
     static clearscope double QA_FrictionToHalftime(double friction, int fps = 35)
     {
         return log(0.5) / (log(1 - friction) * fps);
     }
-    
+
     static clearscope double QA_HalftimeToQFriction(double halftime, int fps = 35)
     {
         return QA_HalftimeToFriction(halftime, fps) * fps;
     }
-    
+
     static clearscope double QA_QFrictionToHalftime(double qfriction, int fps = 35)
     {
         return QA_FrictionToHalftime(qfriction / fps, fps);
@@ -270,8 +355,8 @@ class QuakeAccelPlayer: PlayerPawn
     {
         return CVar.FindCVar("turbo").GetFloat() / 100;
     }
-    
-    
+
+
     // j = jumpz, g = gravity, h = jump height
     // j(j+g) / 2g = h
     // j(j+g)      = 2gh
@@ -291,25 +376,26 @@ class QuakeAccelPlayer: PlayerPawn
     // it probably has to do with doom's physics being based off discrete time
     //  units, rather than being continuous. if I knew how to get it right the
     //  first time, I would.
-    
+
     static clearscope double QA_HeightToJumpZ(double h, double g = 1)
     {
         double baseEstimate = (sqrt(g**2 + (8*g*h)) - g) / 2;
-        
+
         // round estimate to previous multiple of g (so vz = 0 at the peak tic),
         //  and figure out how high that gets us
         double estimate  = baseEstimate - (baseEstimate % g);
         double estHeight = estimate * (estimate + g) / (2 * g);
-        
+
         // get the difference from what we want, divide it by the amount of tics
         //  you spend rising, add it onto the estimate
         double estDiff = (h - estHeight);
         double estTime = ceil(baseEstimate / g);
         estimate += estDiff / estTime;
-        
+
         return estimate;
     }
-    
+
+
     static clearscope vector3 QA_Rotate3D(vector3 vec, double yaw, double pitch)
     {
         // x' =  cos(angle) cos(pitch)x + -sin(angle)y + cos(angle) sin(pitch)z
@@ -348,64 +434,95 @@ class QuakeAccelPlayer: PlayerPawn
         {
             cmd.sidemove = (cmd.sidemove * 5) / 4;
         }
-
-        // throw jump and crouch into here, and loosely guess at whether the player
-        //  is walking or running
-        int maxXYmove = max(abs(cmd.forwardmove), abs(cmd.sidemove));
-
+        
         cmd.upmove = (cmd.upmove * MAXMOVE) / 0x300;
 
-        cmd.upmove = clamp(cmd.upmove, -MAXMOVE, MAXMOVE);
+        // no +strafe/joypad shenanigans for you
+        cmd.forwardmove = clamp(cmd.forwardmove, -MAXMOVE, MAXMOVE);
+        cmd.sidemove    = clamp(cmd.sidemove,    -MAXMOVE, MAXMOVE);
+        cmd.upmove      = clamp(cmd.upmove,      -MAXMOVE, MAXMOVE);
+
     }
 
 
-    static clearscope vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, int flags = 0)
+    static clearscope vector3, double QA_GetMoveDir(UserCmd cmd, double angle, double pitch, int flags = 0,
+                                        double forwardscale = 1, double backscale = 1, double sidescale = 1, double upscale = 1)
     {
-        vector3 movedir;
+        vector3 forward = (0,0,0);
+        vector3 side    = (0,0,0);
+        vector3 up      = (0,0,0);
 
         if (flags & QMF_FLYING)
         {
-            movedir = QA_Rotate3D((cmd.forwardmove, -cmd.sidemove, 0), angle, pitch);
-            if (abs(cmd.upmove) >= (MAXMOVE / 4)) { movedir.z = cmd.upmove; }
-            
-            if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { movedir.z += 12800; }
-            if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { movedir.z -= 12800; }
+            forward = QA_Rotate3D((cmd.forwardmove, 0, 0), angle, pitch);
+            side    = QA_Rotate3D((0, -cmd.sidemove, 0), angle, pitch);
+            up.z    = cmd.upmove;
+
+            if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { up.z += MAXMOVE; }
+            if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { up.z -= MAXMOVE; }
         }
         else
         {
-            vector2 movedir_xy = RotateVector((cmd.forwardmove, -cmd.sidemove), angle);
-            movedir = (movedir_xy.x, movedir_xy.y, (flags & QMF_FLAWEDXY) ? cmd.upmove : 0);
+            forward.xy = RotateVector((cmd.forwardmove, 0), angle);
+            side.xy    = RotateVector((0, -cmd.sidemove), angle);
+            if (flags & QMF_FLAWEDXY) { up.z = cmd.upmove; }
         }
+        
+        vector3 back = (0,0,0);
+        if (cmd.forwardmove < 0) { back = forward; forward = (0,0,0); }
 
-        movedir /= (MAXMOVE * QA_Turbo());
+        double movescale = MAXMOVE * QA_Turbo();
+        forward /= movescale;
+        back    /= movescale;
+        side    /= movescale;
+        up      /= movescale;
+        
+        // we can't have the movement command exceed the highest scalar, but
+        //  we also don't want straferunning to feel like ass, as it would if
+        //  we scaled this stuff after the normalization
+        
+        double topscalar = max(forwardscale, backscale, sidescale, upscale);
+        forward *= forwardscale;
+        back    *= backscale;
+        side    *= sidescale;
+        up      *= upscale;
 
-        double movelength = movedir.length();
+        vector3 movedir    = forward + back + side + up;
+        double  movelength = movedir.length();
         if (movelength == 0) { return (0, 0, 0), 0; }
 
-        double movescalar = 1;
-
-        if (flags & QMF_FLAWEDXY)
+        if (movelength > topscalar)
         {
-            movedir.z  = 0;
-            movescalar = movedir.length() / movelength;
-            movelength = movedir.length();
-
-            if (movelength == 0) { return (0, 0, 0), 0; }
+            double rescale = movelength / topscalar;
+            
+            forward /= rescale;
+            back    /= rescale;
+            side    /= rescale;
+            up      /= rescale;
+            
+            movelength = topscalar;
         }
+        
+        // for Q_FlawedXYMove
+        if (!(flags & QMF_FLYING)) { up = (0,0,0); }
 
-        movelength = min(movelength, 1) * movescalar;
+        // angle/pitch might've changed, so recalc
+        movedir    = forward + back + side + up;
+        movelength = movedir.length();
+        if (movelength == 0) { return (0, 0, 0), 0; }
+
         return movedir.unit(), movelength;
     }
-    
-    
+
+
     bool QA_CheckDropoff()
     {
         // if we're standing on a thing, don't even bother, it'll just act weird
         if (pos.z > floorz) { return false; }
-        
+
         double thresholdFloorZ = floorz;
         double lowestFloorZ    = floorz;
-        
+
         if (vel.xy.length() > 0)
         {
             for (int i = 0; i < 4; i++)
@@ -413,15 +530,15 @@ class QuakeAccelPlayer: PlayerPawn
                 FCheckPosition checkResult;
                 vector2 newpos = pos.xy + (vel.xy.unit() * 8 * i);
                 CheckMove(newpos, PCM_NOACTORS, checkResult);
-                
+
                 double checkZ = checkResult.floorz;
-                
+
                 if (checkZ > floorz + MaxStepHeight) { break; }
                 if (checkZ > thresholdFloorZ) { thresholdFloorZ = checkZ; }
                 lowestFloorZ = min(lowestFloorZ, checkResult.floorz);
             }
         }
-        
+
         return lowestFloorZ < (thresholdFloorZ - MaxStepHeight);
     }
 
@@ -453,7 +570,7 @@ class QuakeAccelPlayer: PlayerPawn
     {
         player.Vel += addVel;
     }
-    
+
     void SetBob(vector2 vel)
     {
         player.Vel = vel;
@@ -463,8 +580,8 @@ class QuakeAccelPlayer: PlayerPawn
     {
         player.Vel *= bobFactor;
     }
-    
-    
+
+
     // Override to make (un)crouching faster
     override void CheckCrouch(bool totallyfrozen)
     {
@@ -478,7 +595,7 @@ class QuakeAccelPlayer: PlayerPawn
             if (!totallyfrozen)
             {
                 int crouchdir = (cmd.buttons & BT_CROUCH) && !(cmd.buttons & BT_JUMP) ? -1 : 1;
-                
+
                 if (crouchdir == 1 && player.crouchfactor < 1 && pos.Z + height < ceilingz)
                 {
                     CrouchMove(4);
@@ -514,7 +631,7 @@ class QuakeAccelPlayer: PlayerPawn
         bool wasOnGround = player.onground;
         player.onground = (pos.z <= floorz) || bOnMobj || bMBFBouncer || (player.cheats & CF_NOCLIP2);
         MaxStepHeight = (player.onground || waterlevel > 0) ? Default.MaxStepHeight : Q_MidairStepHeight;
-        
+
         Q_GroundTime  = player.onground ? max(0, Q_GroundTime) + 1 : min(0, Q_GroundTime) - 1;
         Q_WaterTime   = waterlevel > 1  ? max(0, Q_WaterTime)  + 1 : min(0, Q_WaterTime)  - 1;
 
@@ -631,11 +748,11 @@ class QuakeAccelPlayer: PlayerPawn
             vel.z = vz;
             return ret;
         }
-        
+
         double normFriction, normSpeed;
 
         [normFriction, normSpeed] = GetFriction();
-        
+
         double frictionMult = (1 - normFriction) / (1 - DEFAULT_FRICTION);
         double speedMult    = normSpeed          / DEFAULT_MOVEMULT;
         double speed        = vel.length();
@@ -647,12 +764,12 @@ class QuakeAccelPlayer: PlayerPawn
             else if (speed <= MORE_FRICTION_VELOCITY * 2) { speedMult *= 4; }
             else if (speed <= MORE_FRICTION_VELOCITY * 4) { speedMult *= 2; }
         }
-        
+
         // unfuck water level speed mult bullshit
         if (waterlevel > 0 && !player.onground) { speedMult *= 2; }
 
         if (halftime == 0) { vel = (0,0,0); }
-        
+
         if (vel.length() == 0)
         {
             ReduceBob(0);
@@ -694,7 +811,7 @@ class QuakeAccelPlayer: PlayerPawn
     vector3 QA_Accelerate(vector3 wishdir, double wishspeed, double maxspeed)
     {
         vector3 addVel;
-        
+
         if (maxspeed < 0)
         {
             addVel = wishdir * (wishspeed / (TICRATE * TICRATE));
@@ -797,18 +914,18 @@ class QuakeAccelPlayer: PlayerPawn
 
             if (speedFromFloor > 0) { rampVel = alignedvel + (fromFloorVel * Q_DoubleJumpFactor); }
             else                    { rampVel = alignedvel; }
-            
+
             rampVel += jumpvector;
 
             // XY changes always apply to ramp jumps, but Z changes can be disabled
             vector3 noRampVel  = (vel.x, vel.y, jumpvelz + max(0, startvel.z * Q_DoubleJumpFactor));
             vector3 noRampDiff = rampVel - noRampVel;
-            
+
             vector3 newVel  = noRampVel + (noRampDiff * Q_RampJumpFactor);
             vector3 velDiff = newvel - vel;
             Bob(velDiff.xy);
             vel = newVel;
-            
+
             if (!Q_Autohop) { Q_BlockJump  = true; }
             if (!(player.cheats & CF_PREDICTING)) { A_PlaySound("*jump", CHAN_BODY); }
 
@@ -824,34 +941,39 @@ class QuakeAccelPlayer: PlayerPawn
         UserCmd cmd = player.cmd;
         vector3 movedir = (0,0,0);
         double  movelength = 0;
-        
+
         bool swimming  = waterlevel && !(bNoclip && bNoGravity);
         bool surfacing = swimming && waterlevel <= 1 && !bNoGravity;
-        
+
         if (surfacing)
         {
             QA_GravityMove();
-            
+
             if (Q_WaterTime == -1 && Q_Q2SurfaceTension)
-            { 
+            {
                 vel.z = min(0, vel.z - GetGravity());
             }
             else
             {
                 vel.z -= GetGravity();
             }
-            
+
             return;
         }
-        
+
         Q_BlockSlide = true;
-        
+
         if (reactiontime <= 0)
         {
+            double fwdscale  = Q_ForwardScale  * (swimming ? Q_WaterForwardScale  : Q_FlyForwardScale);
+            double backscale = Q_BackwardScale * (swimming ? Q_WaterBackwardScale : Q_FlyBackwardScale);
+            double sidescale = Q_SideScale     * (swimming ? Q_WaterSideScale     : Q_FlySideScale);
+            double upscale   = Q_UpScale       * (swimming ? Q_WaterUpScale       : Q_FlyUpScale);
+            
             int flags = QMF_FLYING;
             if (swimming & Q_InstantZAdjust) { flags |= QMF_IGNOREJUMP | QMF_IGNORECROUCH; }
-            
-            [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, flags);
+
+            [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, flags, fwdscale, backscale, sidescale, upscale);
         }
 
         double speedmult, wishspeed, maxspeed, friction;
@@ -859,13 +981,13 @@ class QuakeAccelPlayer: PlayerPawn
         if (swimming)
         {
             double halftime = Q_WaterFriction;
-            
+
             if (waterlevel < 3)
             {
                 double friction = QA_HalftimeToFriction(halftime, TICRATE) * (waterlevel / 3.0);
                 halftime = QA_FrictionToHalftime(friction, TICRATE);
             }
-            
+
             friction  = QA_Friction(halftime, Q_StopWaterSpeed, true);
             wishspeed = Q_WaterSpeed;
             maxspeed  = Q_MaxWaterSpeed;
@@ -884,20 +1006,22 @@ class QuakeAccelPlayer: PlayerPawn
         Bob(accel.xy);
 
         if (!(player.cheats & CF_PREDICTING) && accel.length() > 0) { PlayRunning(); }
-        
+
         if (reactiontime <= 0 && swimming && Q_InstantZAdjust)
         {
             int direction = 0;
             if (cmd.buttons & BT_JUMP) { direction++; }
             if (cmd.buttons & BT_CROUCH) { direction--; }
-            
+
             if (direction)
             {
-                vel.z = direction * (Q_MaxWaterSpeed / (TICRATE * 2));
+                double upscale = Q_UpScale * (swimming ? Q_WaterUpScale : Q_FlyUpScale);
+                
+                vel.z = direction * upscale * (Q_MaxWaterSpeed / (TICRATE * 2));
                 PlayRunning();
             }
         }
-        
+
         // TODO: remove this when/if +DONTSINK gets added
         if (swimming && !(cmd.forwardmove || cmd.sidemove)) { cmd.forwardmove = 1; }
     }
@@ -908,13 +1032,13 @@ class QuakeAccelPlayer: PlayerPawn
         UserCmd cmd = player.cmd;
         vector3 movedir = (0,0,0);
         double  movelength = 0;
-        
+
         bool crouching = QA_IsCrouching(cmd);
         bool sliding   = false;
-        
+
         int slideTimeLimit = Q_CrouchSlideTime + int(Q_FallTime * Q_CrouchSlideTimeScale);
         if (Q_CrouchSlideTimeMax > 0) { slideTimeLimit = min(slideTimeLimit, Q_CrouchSlideTimeMax); }
-        
+
         if (player.onground)
         {
             if (!crouching || Q_CrouchSlideHeldTime > slideTimeLimit)
@@ -930,8 +1054,8 @@ class QuakeAccelPlayer: PlayerPawn
         else
         {
             if (!crouching) { Q_BlockSlide = false; }
-            if (Q_GroundTime == -1 && crouching && !Q_AutoSlide) { Q_BlockSlide = true; } 
-            
+            if (Q_GroundTime == -1 && crouching && !Q_AutoSlide) { Q_BlockSlide = true; }
+
             if (!crouching || Q_EasyCrouchSlide)
             {
                 Q_CrouchSlideHeldTime = 0;
@@ -941,10 +1065,10 @@ class QuakeAccelPlayer: PlayerPawn
                 Q_CrouchSlideHeldTime++;
             }
         }
-            
+
 
         double friction, wishspeed, maxspeed;
-        
+
         double dropoffFactor = QA_CheckDropoff() ? 1 + Q_MagneticLedgeScale : 1;
         bool   jumped = QA_CheckJump();
 
@@ -952,9 +1076,14 @@ class QuakeAccelPlayer: PlayerPawn
         {
             if (reactiontime <= 0)
             {
-                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch);
+                double fwdscale  = Q_ForwardScale  * (sliding ? Q_CSlideForwardScale  : Q_GroundForwardScale);
+                double backscale = Q_BackwardScale * (sliding ? Q_CSlideBackwardScale : Q_GroundBackwardScale);
+                double sidescale = Q_SideScale     * (sliding ? Q_CSlideSideScale     : Q_GroundSideScale);
+                double upscale   = Q_UpScale       * (sliding ? Q_CSlideUpScale       : Q_GroundUpScale);
+                
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, 0, fwdscale, backscale, sidescale, upscale);
             }
-            
+
             if (crouching)
             {
                 if (sliding)
@@ -981,25 +1110,31 @@ class QuakeAccelPlayer: PlayerPawn
         {
             if (reactiontime <= 0)
             {
-                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, (Q_FlawedAirMove ? QMF_FLAWEDXY : 0));
+                double fwdscale  = Q_ForwardScale  * Q_AirForwardScale;
+                double backscale = Q_BackwardScale * Q_AirBackwardScale;
+                double sidescale = Q_SideScale     * Q_AirSideScale;
+                double upscale   = Q_UpScale       * Q_AirUpScale;
+                
+                int flags = (Q_FlawedAirMove ? QMF_FLAWEDXY : 0);
+                [movedir, movelength] = QA_GetMoveDir(cmd, Angle, Pitch, flags, fwdscale, backscale, sidescale, upscale);
             }
 
             friction  = QA_Friction(Q_AirFriction, Q_StopAirSpeed);
             wishspeed = Q_AirSpeed;
             maxspeed  = Q_MaxAirSpeed;
         }
-        
+
         double speedmult = QA_GetSpeedBoosts() * friction * movelength;
-        
+
         if (waterlevel)
         {
             double waterfriction = QA_HalftimeToFriction(Q_WaterFriction, TICRATE) * (waterlevel / 3.0);
             double halftime      = QA_FrictionToHalftime(waterfriction, TICRATE);
-            
+
             QA_Friction(halftime, Q_StopWaterSpeed);
-            speedmult *= Q_WadingSpeedScale;
+            speedmult *= Q_WadingScale;
         }
-        
+
         vector3 accel = QA_Accelerate(movedir, wishspeed * speedmult, maxspeed * speedmult);
         Bob(accel.xy);
 
@@ -1010,7 +1145,7 @@ class QuakeAccelPlayer: PlayerPawn
     void QA_SetRoll(Usercmd cmd)
     {
         if (Q_RollMax == 0) { return; }
-        
+
         vector2 velxy   = (vel.x, vel.y);
 
         vector2 forward      = (cos(Angle), sin(Angle));
