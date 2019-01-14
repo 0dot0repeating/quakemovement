@@ -202,15 +202,15 @@ a halftime value of approxiamtely 0.2012.
 Max speed (in u/tic) can be solved easily given acceleration (in u/tic²) and friction
 (in percentage of velocity kept per tic) with the equation `v = af/(1-f)`.
 
- Movement mode  | Accel (u/tic²)  | Accel (u/s²)  | Max speed (u/s)
-:--------------:|:---------------:|:-------------:|:---------------:
-Forward run     | 1.5625          | 1914.0625     | 528.646
-Forward walk    | 0.78125         | 957.03125     | 264.323
-Sideways run    | 1.25            | 1531.25       | 422.917
-Sideways walk   | 0.75            | 918.75        | 253.75
-Sideways mouse¹ | 1.5625          | 1914.0625     | 528.646
-SR40            | 2.00098         | 2706.8931     | 676.997
-SR50            | 2.20971         | 2451.156      | 747.618
+ Movement mode  | Accel (u/tic²)  | Accel (u/s²)  | Max speed (u/tic) | Max speed (u/s)
+:--------------:|:---------------:|:-------------:|:-----------------:|:---------------:
+Forward run     | 1.5625          | 1914.0625     | 15.1041           | 528.646
+Forward walk    | 0.78125         |  957.03125    |  7.5520           | 264.323
+Sideways run    | 1.25            | 1531.25       | 12.0833           | 422.917
+Sideways walk   | 0.75            |  918.75       |  7.25             | 253.75
+Sideways mouse¹ | 1.5625          | 1914.0625     | 15.1041           | 528.646
+SR40            | 2.00098         | 2706.8931     | 19.3427           | 676.997
+SR50            | 2.20971         | 2451.156      | 21.3605           | 747.618
 
 ¹ Max strafe speed when using the mouse.
 
