@@ -1146,15 +1146,11 @@ class QuakeAccelPlayer: PlayerPawn
     {
         if (Q_RollMax == 0) { return; }
 
-        vector2 velxy   = (vel.x, vel.y);
-
         vector2 forward      = (cos(Angle), sin(Angle));
-        double  forwardSpeed = velxy dot forward;
+        double  forwardSpeed = vel.xy dot forward;
 
-        vector2 side      = velxy - (forward * forwardSpeed);
-        double  sideSpeed = side.length();
-
-        if (deltaangle(atan2(forward.y, forward.x), atan2(side.y, side.x)) > 0) { sideSpeed *= -1; }
+        vector2 side      = (cos(Angle-90), sin(Angle-90));
+        double  sideSpeed = vel.xy dot side;
 
         double desiredRoll = clamp(sideSpeed * Q_RollScale, -Q_RollMax, Q_RollMax);
         double rollDiff = clamp(desiredRoll - Roll, -Q_RollSpeed / TICRATE, Q_RollSpeed / TICRATE);
