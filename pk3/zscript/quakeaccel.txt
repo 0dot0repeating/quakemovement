@@ -441,7 +441,6 @@ class QuakeAccelPlayer: PlayerPawn
         cmd.forwardmove = clamp(cmd.forwardmove, -MAXMOVE, MAXMOVE);
         cmd.sidemove    = clamp(cmd.sidemove,    -MAXMOVE, MAXMOVE);
         cmd.upmove      = clamp(cmd.upmove,      -MAXMOVE, MAXMOVE);
-
     }
 
 
@@ -460,6 +459,7 @@ class QuakeAccelPlayer: PlayerPawn
 
             if (!(flags & QMF_IGNOREJUMP)   && cmd.buttons & BT_JUMP)   { up.z += MAXMOVE; }
             if (!(flags & QMF_IGNORECROUCH) && cmd.buttons & BT_CROUCH) { up.z -= MAXMOVE; }
+            up.z = clamp(up.z, -MAXMOVE, MAXMOVE);
         }
         else
         {
