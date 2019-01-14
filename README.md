@@ -215,7 +215,12 @@ SR50            | 2.20971         | 2451.156      | 21.3605           | 747.618
 ¹ Max strafe speed when using the mouse.
 
 
-### Quake friction values to half-time values
+### Quake values
+
+Calculating max speed with Quake physics is different than in Doom, because Quake
+applies friction before acceleration rather than Doom's friction after acceleration.
+Therefore, the equation for max speed given friction and acceleration (same units as
+above) is `v = a/(1-f)`.
 
 In general, you can convert Quake friction values to half-time values with this Python function:
 
