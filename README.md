@@ -64,11 +64,11 @@ or Slash in Quake Champions. The contexts are:
 
 
 - `GroundSpeed`, `CrouchSpeed`, `AirSpeed`, `FlySpeed`, `WaterSpeed`, `CSlideSpeed`: **double**  
-    Your maximum acceleration in the five contexts. These values are in units/s^2.
+    Your maximum acceleration in the five contexts. These values are in u/s².
 
 
 - `MaxGroundSpeed`, `MaxCrouchSpeed`, `MaxAirSpeed`, `MaxFlySpeed`, `MaxWaterSpeed`, `MaxCSlideSpeed`: **double**  
-    Your maximum speed in the five contexts. These values are in units/s.
+    Your maximum speed in the five contexts. These values are in u/s.
     Negative values represent no hard speed cap.
 
 
@@ -84,8 +84,8 @@ or Slash in Quake Champions. The contexts are:
 
 - `StopGroundSpeed`, `StopCrouchSpeed`, `StopAirSpeed`, `StopFlySpeed`, `StopWaterSpeed`, `StopCSlideSpeed`: **double**  
     The friction functions will act like your speed is at least this value when slowing you down.
-    For example, a value of 200 means that you'll be treated as moving at 200 units/s if you're
-    moving slower than that, and you will be slowed down accordingly. These values are in units/s.
+    For example, a value of 200 means that you'll be treated as moving at 200 u/s if you're
+    moving slower than that, and you will be slowed down accordingly. These values are in u/s.
 
 
 - `QGravity`: **double**  
@@ -199,10 +199,10 @@ the other games in their entirety.
 Doom's default friction value is 0.90625, which at its fixed ticrate of 35 translates to
 a halftime value of approxiamtely 0.2012.
 
-Max speed (in u/tic) can be solved easily given acceleration (in u/tic^2) and friction
+Max speed (in u/tic) can be solved easily given acceleration (in u/tic²) and friction
 (in percentage of velocity kept per tic) with the equation `v = af/(1-f)`.
 
- Movement mode  | Accel (u/tic^2) | Accel (u/s^2) | Max speed (u/s)
+ Movement mode  | Accel (u/tic²)  | Accel (u/s²)  | Max speed (u/s)
 :--------------:|:---------------:|:-------------:|:---------------:
 Forward run     | 1.5625          | 1914.0625     | 528.646
 Forward walk    | 0.78125         | 957.03125     | 264.323
