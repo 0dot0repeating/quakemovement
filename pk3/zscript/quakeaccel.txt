@@ -468,12 +468,10 @@ class QuakeAccelPlayer: PlayerPawn
             if (flags & QMF_FLAWEDXY) { up.z = cmd.upmove; }
         }
         
-        vector3 back = (0,0,0);
-        if (cmd.forwardmove < 0) { back = forward; forward = (0,0,0); }
+        if (cmd.forwardmove < 0) { forwardscale = backscale; }
 
         double movescale = MAXMOVE * QA_Turbo();
         forward /= movescale;
-        back    /= movescale;
         side    /= movescale;
         up      /= movescale;
         
@@ -481,13 +479,12 @@ class QuakeAccelPlayer: PlayerPawn
         //  we also don't want straferunning to feel like ass, as it would if
         //  we scaled this stuff after the normalization
         
-        double topscalar = max(forwardscale, backscale, sidescale, upscale);
+        double topscalar = max(forwardscale, sidescale, upscale);
         forward *= forwardscale;
-        back    *= backscale;
         side    *= sidescale;
         up      *= upscale;
 
-        vector3 movedir    = forward + back + side + up;
+        vector3 movedir    = forward + side + up;
         double  movelength = movedir.length();
         if (movelength == 0) { return (0, 0, 0), 0; }
 
@@ -496,7 +493,6 @@ class QuakeAccelPlayer: PlayerPawn
             double rescale = movelength / topscalar;
             
             forward /= rescale;
-            back    /= rescale;
             side    /= rescale;
             up      /= rescale;
             
@@ -507,7 +503,7 @@ class QuakeAccelPlayer: PlayerPawn
         if (!(flags & QMF_FLYING)) { up = (0,0,0); }
 
         // angle/pitch might've changed, so recalc
-        movedir    = forward + back + side + up;
+        movedir    = forward + side + up;
         movelength = movedir.length();
         if (movelength == 0) { return (0, 0, 0), 0; }
 
