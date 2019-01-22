@@ -248,6 +248,12 @@ In general, you can convert Quake friction values to half-time values with this 
 ```python
 halftime = lambda friction, ticrate: math.log(0.5, 1-(friction/ticrate))/ticrate```
 
+Regular friction values (such as Doom's 0.90625 friction above, and what you get from
+the `f = (v-a)/v` equation above) can be converted to half-time values with this function:
+
+```python
+halftime = lambda friction, ticrate: math.log(0.5, friction)/ticrate```
+
 For quick reference, here are some pre-converted values. Each row corresponds to a Quake
 friction value, and each column corresponds to a set framerate the engine's physics would be running at.
 

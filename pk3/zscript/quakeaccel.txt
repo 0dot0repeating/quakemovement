@@ -403,17 +403,22 @@ class QuakeAccelPlayer: PlayerPawn
         // z' =            -sin(pitch)x                +            cos(pitch)z
 
         vector3 ret;
+        
+        double sy = sin(yaw);
+        double cy = cos(yaw);
+        double sp = sin(pitch);
+        double cp = cos(pitch);
 
-        ret.x = (vec.x * cos(yaw) * cos(pitch))
-              - (vec.y * sin(yaw))
-              + (vec.z * cos(yaw) * sin(pitch));
+        ret.x = (vec.x * cy * cp)
+              - (vec.y * sy)
+              + (vec.z * cy * sp);
 
-        ret.y = (vec.x * sin(yaw) * cos(pitch))
-              + (vec.y * cos(yaw))
-              + (vec.z * sin(yaw) * sin(pitch));
+        ret.y = (vec.x * sy * cp)
+              + (vec.y * cy)
+              + (vec.z * sy * sp);
 
-        ret.z = -(vec.x * sin(pitch))
-              +  (vec.z * cos(pitch));
+        ret.z = -(vec.x * sp)
+              +  (vec.z * cp);
 
         return ret;
     }
