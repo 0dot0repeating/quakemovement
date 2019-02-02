@@ -443,9 +443,10 @@ class QuakeAccelPlayer: PlayerPawn
         cmd.upmove = (cmd.upmove * MAXMOVE) / 0x300;
 
         // no +strafe/joypad shenanigans for you
-        cmd.forwardmove = clamp(cmd.forwardmove, -MAXMOVE, MAXMOVE);
-        cmd.sidemove    = clamp(cmd.sidemove,    -MAXMOVE, MAXMOVE);
-        cmd.upmove      = clamp(cmd.upmove,      -MAXMOVE, MAXMOVE);
+        int curMaxMove = MAXMOVE * QA_Turbo();
+        cmd.forwardmove = clamp(cmd.forwardmove, -curMaxMove, curMaxMove);
+        cmd.sidemove    = clamp(cmd.sidemove,    -curMaxMove, curMaxMove);
+        cmd.upmove      = clamp(cmd.upmove,      -curMaxMove, curMaxMove);
     }
 
 
@@ -1158,7 +1159,7 @@ class QuakeAccelPlayer: PlayerPawn
         vector2 forward      = (cos(Angle), sin(Angle));
         double  forwardSpeed = vel.xy dot forward;
 
-        vector2 side      = (cos(Angle-90), sin(Angle-90));
+        vector2 side      = (cos(Angle+90), sin(Angle+90));
         double  sideSpeed = vel.xy dot side;
 
         double desiredRoll = clamp(sideSpeed * Q_RollScale, -Q_RollMax, Q_RollMax);
