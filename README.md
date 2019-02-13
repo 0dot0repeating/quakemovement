@@ -211,7 +211,7 @@ the other games in their entirety.
 ### Doom friction/speed
 
 Doom's default friction value is 0.90625, which at its fixed ticrate of 35 translates to
-a halftime value of approxiamtely 0.2012.
+a halftime value of approximately 0.2012.
 
 Max speed (in u/tic) can be solved easily given acceleration (in u/tic²) and friction
 (in percentage of velocity kept per tic) with the equation `v = af/(1-f)`.
