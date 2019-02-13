@@ -557,6 +557,11 @@ class QuakeAccelPlayer: PlayerPawn
     {
         // voodoo doll check
         if (!self.player || self.player.mo != self) { return; }
+        
+        // if for some reason you have multiple movement systems in the same class,
+        //  this'll let you call QA_SetEnabled(false) and not worry about clobbering
+        //  your current physics values if it was already off
+        if (on == Q_Enabled) { return; }
 
         Q_Enabled         = on;
         Gravity           = on ? Q_Gravity : Default.Gravity;
