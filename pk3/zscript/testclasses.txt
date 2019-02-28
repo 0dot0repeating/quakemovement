@@ -202,8 +202,8 @@ class TestAccelPlayer: Q1AccelPlayer
     {
         Player.DisplayName "Hybrid?";
         
-        QuakeAccelPlayer.GroundSpeed    3300;
-        QuakeAccelPlayer.MaxGroundSpeed 528.6;
+        QuakeAccelPlayer.GroundSpeed    3500;
+        QuakeAccelPlayer.MaxGroundSpeed 583.333;
         
         QuakeAccelPlayer.GroundFriction  0.110963; // 6 @ 77fps
         QuakeAccelPlayer.WaterFriction   0.226518; // 3 @ 77fps

@@ -208,51 +208,53 @@ the other games in their entirety.
 ## Useful info I guess
 
 
-### Doom friction/speed
+### Friction/speed data1
 
 Doom's default friction value is 0.90625, which at its fixed ticrate of 35 translates to
 a halftime value of approximately 0.2012.
 
-Max speed (in u/tic) can be solved easily given acceleration (in u/tic²) and friction
-(in percentage of velocity kept per tic) with the equation `v = af/(1-f)`.
-
- Movement mode  | Accel (u/tic²)  | Accel (u/s²)  | Max speed (u/tic) | Max speed (u/s)
-:--------------:|:---------------:|:-------------:|:-----------------:|:---------------:
-Forward run     | 1.5625          | 1914.0625     | 15.1041           | 528.646
-Forward walk    | 0.78125         |  957.03125    |  7.5520           | 264.323
-Sideways run    | 1.25            | 1531.25       | 12.0833           | 422.917
-Sideways walk   | 0.75            |  918.75       |  7.25             | 253.75
-Sideways mouse¹ | 1.5625          | 1914.0625     | 15.1041           | 528.646
-SR40            | 2.00098         | 2451.156      | 19.3427           | 676.997
-SR50            | 2.20971         | 2706.8931     | 21.3605           | 747.618
-
-¹ Max strafe speed when using the mouse.
-
-
-### Quake max speed
-
-Calculating max speed with Quake physics is different than in Doom, because Quake
-applies friction before acceleration rather than Doom's friction after acceleration.
-Therefore, the equation for max speed given friction and acceleration (same units as
-above) is `v = a/(1-f)`.
+In both Doom and Quake, acceleration is applied to velocity, then velocity is applied
+to position, then friction is applied to velocity. Max speed (in u/tic) can be solved
+easily given acceleration (in u/tic²) and friction (in percentage of velocity kept per
+tic) with the equation `v = a/(1-f)`.
 
 If you have a max speed you want to reach with a given acceleration, use `f = (v-a)/v`.
 
 If you have a max speed you want to reach with a given friction, use `a = v(1-f)`.
+
+ Movement mode  | Accel (u/tic²)  | Accel (u/s²)  | Max speed (u/tic) | Max speed (u/s)
+:--------------:|:---------------:|:-------------:|:-----------------:|:---------------:
+Forward run     | 1.5625          | 1914.0625     | 16.6667           | 583.333
+Forward walk    | 0.78125         |  957.03125    |  8.3333           | 291.667
+Sideways run    | 1.25            | 1531.25       | 13.3333           | 466.667
+Sideways walk   | 0.75            |  918.75       |  8.0              | 280.0
+Sideways mouse¹ | 1.5625          | 1914.0625     | 16.6667           | 583.333
+SR40            | 2.00098         | 2451.156      | 21.3438           | 747.033
+SR50            | 2.20971         | 2706.8931     | 23.5702           | 824.958
+
+¹ Max strafe speed when using the mouse.
 
 
 ### Quake friction
 
 In general, you can convert Quake friction values to half-time values with this Python function:
 
-```python
-halftime = lambda friction, ticrate: math.log(0.5, 1-(friction/ticrate))/ticrate```
+```halftime = lambda friction, ticrate: math.log(0.5, 1-(friction/ticrate))/ticrate```
 
 Regular friction values (such as Doom's 0.90625 friction above, and what you get from
 the `f = (v-a)/v` equation above) can be converted to half-time values with this function:
 
-```python
-halftime = lambda friction, ticrate: math.log(0.5, friction)/ticrate```
+```halftime = lambda friction, ticrate: math.log(0.5, friction)/ticrate```
+
+
+Halftime values can be converted back to regular friction values with this function:
+
+```friction = lambda halftime, ticrate: 0.5 ** (1 / (halftime * ticrate))```
+
+And to Quake friction values:
+
+```qfriction = lambda halftime, ticrate: ticrate * (1 - 0.5 ** (1 / (halftime * ticrate)))```
+
 
 For quick reference, here are some pre-converted values. Each row corresponds to a Quake
 friction value, and each column corresponds to a set framerate the engine's physics would be running at.
